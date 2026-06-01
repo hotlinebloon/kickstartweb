@@ -61,11 +61,17 @@ export function StatCard({
 export function WorkSurface({
   children,
   className = "",
+  id,
 }: {
   children: ReactNode;
   className?: string;
+  id?: string;
 }) {
-  return <section className={`work-surface ${className}`}>{children}</section>;
+  return (
+    <section id={id} className={`work-surface ${className}`}>
+      {children}
+    </section>
+  );
 }
 
 export function BlueprintEnvironment({
