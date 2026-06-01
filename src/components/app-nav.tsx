@@ -18,6 +18,14 @@ function roleLabel(user: DemoUser | null) {
     : `Employer · ${user.name}`;
 }
 
+function roleContext(user: DemoUser | null, hasPlacement: boolean) {
+  if (!user) return "Public access";
+  if (user.role === "applicant") {
+    return hasPlacement ? "Applicant account · Intern workspace unlocked" : "Applicant account";
+  }
+  return "Employer account";
+}
+
 export function AppNav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -56,8 +64,8 @@ export function AppNav() {
 
       if (hasPlacement) {
         applicantLinks.push(
-          { href: "/employee/tasks", label: "Employee Tasks" },
-          { href: "/employee/progress", label: "Progress" }
+          { href: "/employee/tasks", label: "Intern tasks" },
+          { href: "/employee/progress", label: "Intern progress" }
         );
       }
 
@@ -65,8 +73,8 @@ export function AppNav() {
     }
 
     return [
-      { href: "/employer/applicants", label: "Review Applicants" },
-      { href: "/employer/employees", label: "Employee Progress" },
+      { href: "/employer/applicants", label: "Review applicants" },
+      { href: "/employer/employees", label: "Monitor interns" },
     ];
   }, [user, hasPlacement]);
 
@@ -82,11 +90,14 @@ export function AppNav() {
         <div className="nav-top">
           <Link href="/" className="logo">
             <KickstartLogo />
-            Kickstart
+            <span>Kickstart</span>
           </Link>
 
           <div className="nav-actions">
-            <span className="badge">{roleLabel(user)}</span>
+            <span className="role-chip">
+              <span className="role-chip-context">{roleContext(user, hasPlacement)}</span>
+              <span>{roleLabel(user)}</span>
+            </span>
 
             {user ? (
               <button className="btn secondary" onClick={handleLogout}>
@@ -106,25 +117,26 @@ export function AppNav() {
           </div>
         </div>
 
-        <div className="nav-links">
+        <nav className="nav-links" aria-label="Primary">
           <span className="nav-label">
-            {user?.role === "employer" ? "Employer flow" : "Applicant flow"}
+            {user?.role === "employer" ? "Employer workspace" : "Applicant workspace"}
           </span>
 
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`btn ${isActive(pathname, link.href) ? "" : "ghost"}`}
+              className={`nav-link ${isActive(pathname, link.href) ? "active" : ""}`}
+              aria-current={isActive(pathname, link.href) ? "page" : undefined}
             >
               {link.label}
             </Link>
           ))}
-        </div>
+        </nav>
 
         {user?.role === "applicant" && !hasPlacement ? (
           <p className="muted" style={{ fontSize: 13 }}>
-            Employee tasks unlock after the employer accepts your application.
+            Intern workspace unlocks after an employer accepts your application.
           </p>
         ) : null}
       </div>

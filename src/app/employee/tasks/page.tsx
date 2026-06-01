@@ -7,25 +7,50 @@ import {
   getPriorityLabel,
   getProgress,
   getState,
-  getTaskStatusLabel,
   updateTask,
   type DemoState,
   type GrowthTask,
   type TaskStatus,
 } from "@/lib/demo-store";
-import { Badge, Progress } from "@/components/ui";
+import { Badge, Progress, StatCard } from "@/components/ui";
 
-const columns: { id: TaskStatus; title: string; description: string }[] = [
-  { id: "havent_started", title: "Haven’t Started", description: "Assigned but not started." },
-  { id: "working_on_it", title: "Working On It", description: "Employee is working." },
-  { id: "needs_review", title: "Needs Review", description: "Submitted to employer." },
-  { id: "completed", title: "Completed", description: "Approved by employer." },
+const columns: {
+  id: TaskStatus;
+  title: string;
+  description: string;
+}[] = [
+  {
+    id: "havent_started",
+    title: "Haven’t Started",
+    description: "Assigned starter tasks.",
+  },
+  {
+    id: "working_on_it",
+    title: "Working On It",
+    description: "Tasks currently being worked on.",
+  },
+  {
+    id: "needs_review",
+    title: "Needs Review",
+    description: "Submitted work waiting for employer review.",
+  },
+  {
+    id: "completed",
+    title: "Completed",
+    description: "Approved work that counts toward progress.",
+  },
 ];
 
 function nextStatus(status: TaskStatus): TaskStatus | null {
   if (status === "havent_started") return "working_on_it";
   if (status === "working_on_it") return "needs_review";
   return null;
+}
+
+function actionLabel(status: TaskStatus) {
+  if (status === "havent_started") return "Move to Working On It";
+  if (status === "working_on_it") return "Submit to Needs Review";
+  return "Locked";
 }
 
 export default function EmployeeTasksPage() {
@@ -38,41 +63,88 @@ export default function EmployeeTasksPage() {
   }, []);
 
   const placement = useMemo(() => state?.placements[0] ?? null, [state]);
-  const tasks = useMemo(() => (state && placement ? state.tasks.filter((task) => task.placementId === placement.id) : []), [state, placement]);
-  const progress = useMemo(() => (state && placement ? getProgress(placement.id, state) : null), [state, placement]);
+
+  const application = useMemo(() => {
+    if (!state || !placement) return null;
+
+    return (
+      state.applications.find((item) => item.id === placement.applicationId) ??
+      null
+    );
+  }, [state, placement]);
+
+  const tasks = useMemo(() => {
+    if (!state || !placement) return [];
+
+    return state.tasks.filter((task) => task.placementId === placement.id);
+  }, [state, placement]);
+
+  const progress = useMemo(() => {
+    if (!state || !placement) return null;
+
+    return getProgress(placement.id, state);
+  }, [state, placement]);
 
   function startOrSubmit(task: GrowthTask) {
     const status = nextStatus(task.status);
+
     if (!status) return;
 
-    const updateText = updates[task.id]?.trim() || (status === "working_on_it" ? "Started working on this task." : "Submitted task for employer review.");
+    const updateText =
+      updates[task.id]?.trim() ||
+      (status === "working_on_it"
+        ? "Started working on this task."
+        : "Submitted task for employer review.");
 
     const next = updateTask({
       taskId: task.id,
       status,
       updateText,
-      submissionLink: links[task.id]?.trim() || undefined,
+      submissionLink:
+        status === "needs_review"
+          ? links[task.id]?.trim() || "https://github.com/arta-demo/submission"
+          : links[task.id]?.trim() || undefined,
     });
 
     setState(next);
-    setUpdates((prev) => ({ ...prev, [task.id]: "" }));
+
+    setUpdates((prev) => ({
+      ...prev,
+      [task.id]: "",
+    }));
+
+    setLinks((prev) => ({
+      ...prev,
+      [task.id]: "",
+    }));
   }
 
-  if (!state) return <main className="page"><div className="container">Loading...</div></main>;
+  if (!state) {
+    return (
+      <main className="page">
+        <div className="container">Loading...</div>
+      </main>
+    );
+  }
 
-  if (!placement) {
+  if (!placement || !application) {
     return (
       <main className="page">
         <div className="container stack-lg">
           <section className="stack">
-            <p className="eyebrow">Steps 8–9</p>
+            <p className="eyebrow">Intern workspace</p>
             <h1>No starter tasks yet</h1>
-            <p className="lead">The employer must accept an applicant first. That creates the placement and starter tasks.</p>
+            <p className="lead">
+              The employer must accept an applicant first. That creates the
+              placement and unlocks the intern task board.
+            </p>
           </section>
-          <div className="card row">
-            <Link className="btn" href="/applicant/opportunities">Submit Focused Apply</Link>
-            <Link className="btn secondary" href="/employer/applicants">Accept applicant</Link>
-          </div>
+
+          <section className="card row">
+            <Link className="btn" href="/applicant/opportunities">
+              Browse opportunities
+            </Link>
+          </section>
         </div>
       </main>
     );
@@ -83,81 +155,200 @@ export default function EmployeeTasksPage() {
       <div className="container stack-lg">
         <section className="between">
           <div className="stack">
-            <p className="eyebrow">Steps 8–9</p>
-            <h1>Employee task board</h1>
-            <p className="lead">Start a task, add a progress update, and submit it to Needs Review. The employer completes it later.</p>
+            <p className="eyebrow">Intern workspace</p>
+            <h1>Intern task board</h1>
+            <p className="lead">
+              Move starter tasks from assigned work to active progress, then
+              submit proof for employer review.
+            </p>
           </div>
-          <Link className="btn secondary" href="/employer/employees">Employer review</Link>
+
+          <div className="row">
+            <Link className="btn secondary" href="/employee/progress">
+              Intern progress
+            </Link>
+          </div>
         </section>
 
-        <div className="card stack">
-          <div className="between">
-            <div>
-              <h3>{placement.roleTitle}</h3>
-              <p className="muted">Placement started {formatDate(placement.startDate)}</p>
-            </div>
-            <Badge tone="accent">{progress?.completionRate ?? 0}% complete</Badge>
-          </div>
-          <Progress value={progress?.completionRate ?? 0} />
-          <div className="row">
-            <Badge>Not started: {progress?.notStarted ?? 0}</Badge>
-            <Badge>Working: {progress?.working ?? 0}</Badge>
-            <Badge>Review: {progress?.review ?? 0}</Badge>
-            <Badge>Completed: {progress?.completed ?? 0}</Badge>
-          </div>
-        </div>
-
-        <section className="grid grid-4">
-          {columns.map((column) => (
-            <div key={column.id} className="card stack" style={{ alignSelf: "start" }}>
-              <div>
-                <div className="between">
-                  <h3>{column.title}</h3>
-                  <Badge>{tasks.filter((task) => task.status === column.id).length}</Badge>
-                </div>
-                <p className="muted" style={{ marginTop: 6 }}>{column.description}</p>
+        <section className="growth-summary">
+          <div className="growth-hero-card">
+            <div className="between">
+              <div className="stack-sm">
+                <p className="eyebrow">Active placement</p>
+                <h2>{placement.roleTitle}</h2>
+                <p className="muted">
+                  {application.applicantSnapshot.fullName} · {state.company.name} ·
+                  started {formatDate(placement.startDate)}
+                </p>
               </div>
 
-              {tasks.filter((task) => task.status === column.id).length === 0 ? (
-                <div className="notice muted">No tasks here.</div>
-              ) : (
-                tasks.filter((task) => task.status === column.id).map((task) => (
-                  <div key={task.id} className="notice stack">
-                    <div className="between">
-                      <strong>{task.title}</strong>
-                      <Badge>{getPriorityLabel(task.priority)}</Badge>
-                    </div>
-                    <p className="muted">{task.description}</p>
-                    <p className="muted">Due {formatDate(task.dueDate)}</p>
-                    {task.latestUpdate ? <p><strong>Update:</strong> {task.latestUpdate}</p> : null}
-                    {task.submissionLink ? <p className="muted" style={{ wordBreak: "break-all" }}><strong>Submission:</strong> {task.submissionLink}</p> : null}
-                    {task.feedbackComment ? <p><strong>Employer feedback:</strong> {task.feedbackComment}</p> : null}
-                    {task.status !== "completed" && task.status !== "needs_review" ? (
-                      <>
-                        <textarea
-                          className="textarea"
-                          placeholder="Write progress update..."
-                          value={updates[task.id] ?? ""}
-                          onChange={(event) => setUpdates((prev) => ({ ...prev, [task.id]: event.target.value }))}
-                        />
-                        <input
-                          className="input"
-                          placeholder="Proof/submission link"
-                          value={links[task.id] ?? ""}
-                          onChange={(event) => setLinks((prev) => ({ ...prev, [task.id]: event.target.value }))}
-                        />
-                        <button className="btn" onClick={() => startOrSubmit(task)}>
-                          {task.status === "havent_started" ? "Move to Working On It" : "Submit to Needs Review"}
-                        </button>
-                      </>
-                    ) : null}
-                    {task.status === "needs_review" ? <Badge tone="warning">Waiting for employer review</Badge> : null}
-                    {task.status === "completed" ? <Badge tone="success">Counts toward progress profile</Badge> : null}
-                  </div>
-                ))
-              )}
+              <Badge tone="accent">{progress?.completionRate ?? 0}% complete</Badge>
             </div>
-          ))}
+
+            <Progress value={progress?.completionRate ?? 0} />
+
+            <div className="grid grid-4">
+              <StatCard
+                title="Not started"
+                description="Assigned"
+                value={progress?.notStarted ?? 0}
+              />
+              <StatCard
+                title="Working"
+                description="In progress"
+                value={progress?.working ?? 0}
+              />
+              <StatCard
+                title="Review"
+                description="Waiting employer"
+                value={progress?.review ?? 0}
+              />
+              <StatCard
+                title="Completed"
+                description="Approved"
+                value={progress?.completed ?? 0}
+              />
+            </div>
+          </div>
+
+          <aside className="side-panel">
+            <section className="side-panel-card">
+              <p className="eyebrow">How to demo this</p>
+              <h3>Move one task through the board</h3>
+              <p className="muted">
+                Start with a task in Haven’t Started, move it to Working On It,
+                then submit it to Needs Review. The employer completes it on the
+                review page.
+              </p>
+            </section>
+
+            <section className="side-panel-card">
+              <p className="eyebrow">Why it matters</p>
+              <h3>Kickstart continues after hiring</h3>
+              <p className="muted">
+                The intern does not disappear after being accepted. Their work,
+                feedback, and proof become visible progress.
+              </p>
+            </section>
+          </aside>
+        </section>
+
+        <section className="growth-board">
+          {columns.map((column) => {
+            const columnTasks = tasks.filter((task) => task.status === column.id);
+
+            return (
+              <div key={column.id} className="growth-column">
+                <div className="growth-column-header">
+                  <div>
+                    <h3>{column.title}</h3>
+                    <p className="muted" style={{ marginTop: 6 }}>
+                      {column.description}
+                    </p>
+                  </div>
+
+                  <Badge>{columnTasks.length}</Badge>
+                </div>
+
+                {columnTasks.length === 0 ? (
+                  <div className="empty-column">No tasks here.</div>
+                ) : (
+                  columnTasks.map((task) => (
+                    <article key={task.id} className="growth-task">
+                      <div className="growth-task-title">
+                        <strong>{task.title}</strong>
+                        <Badge>{getPriorityLabel(task.priority)}</Badge>
+                      </div>
+
+                      <p className="muted">{task.description}</p>
+
+                      <div className="task-meta-grid">
+                        <div className="task-meta-box">
+                          <p className="eyebrow">Due</p>
+                          <p>{formatDate(task.dueDate)}</p>
+                        </div>
+
+                        <div className="task-meta-box">
+                          <p className="eyebrow">Priority</p>
+                          <p>{getPriorityLabel(task.priority)}</p>
+                        </div>
+                      </div>
+
+                      {task.latestUpdate ? (
+                        <p>
+                          <strong>Update:</strong> {task.latestUpdate}
+                        </p>
+                      ) : null}
+
+                      {task.submissionLink ? (
+                        <p className="muted proof-link">
+                          <strong>Submission:</strong> {task.submissionLink}
+                        </p>
+                      ) : null}
+
+                      {task.feedbackComment ? (
+                        <p>
+                          <strong>Employer feedback:</strong>{" "}
+                          {task.feedbackComment}
+                        </p>
+                      ) : null}
+
+                      {task.status === "havent_started" ||
+                      task.status === "working_on_it" ? (
+                        <div className="task-action-area">
+                          <textarea
+                            className="textarea"
+                            placeholder={
+                              task.status === "havent_started"
+                                ? "What will you start with?"
+                                : "What did you finish or learn?"
+                            }
+                            value={updates[task.id] ?? ""}
+                            onChange={(event) =>
+                              setUpdates((prev) => ({
+                                ...prev,
+                                [task.id]: event.target.value,
+                              }))
+                            }
+                          />
+
+                          <input
+                            className="input"
+                            placeholder="Proof/submission link"
+                            value={links[task.id] ?? ""}
+                            onChange={(event) =>
+                              setLinks((prev) => ({
+                                ...prev,
+                                [task.id]: event.target.value,
+                              }))
+                            }
+                          />
+
+                          <button
+                            className="btn"
+                            type="button"
+                            onClick={() => startOrSubmit(task)}
+                          >
+                            {actionLabel(task.status)}
+                          </button>
+                        </div>
+                      ) : null}
+
+                      {task.status === "needs_review" ? (
+                        <Badge tone="warning">Waiting for employer review</Badge>
+                      ) : null}
+
+                      {task.status === "completed" ? (
+                        <Badge tone="success">
+                          Counts toward progress profile
+                        </Badge>
+                      ) : null}
+                    </article>
+                  ))
+                )}
+              </div>
+            );
+          })}
         </section>
       </div>
     </main>

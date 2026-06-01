@@ -1,118 +1,244 @@
 "use client";
 
-import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { formatDate, getState, submitFocusedApply, type DemoState } from "@/lib/demo-store";
-import { Badge } from "@/components/ui";
+import { useParams } from "next/navigation";
+import { formatDate, getState, type DemoState } from "@/lib/demo-store";
+import {
+  Badge,
+  BlueprintEnvironment,
+  EmptyState,
+  LoadingState,
+  StatusBadge,
+  WorkSurface,
+} from "@/components/ui";
 
 export default function OpportunityDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const id = String(params.id);
+
   const [state, setState] = useState<DemoState | null>(null);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [scenarioResponse, setScenarioResponse] = useState("I would start by identifying the main goal of the hero section, then build a simple layout with a headline, short value proposition, CTA button, and responsive spacing. I would submit a first version, ask for feedback, and improve it based on the review.");
-  const [proofUrl, setProofUrl] = useState("https://github.com/arta-demo/landing-page");
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    const current = getState();
-    setState(current);
-    const opportunity = current.opportunities.find((item) => item.id === id);
-    if (opportunity) {
-      setAnswers(Object.fromEntries(opportunity.questions.map((question, index) => [question, index === 0 ? "I want to learn through real tasks and feedback instead of only submitting a CV." : index === 1 ? "I built a simple personal portfolio and a small event page for school." : "I want to improve React component structure and responsive design."])));
-    }
-  }, [id]);
+    setState(getState());
+  }, []);
 
-  const opportunity = useMemo(() => state?.opportunities.find((item) => item.id === id) ?? null, [state, id]);
+  const opportunity = useMemo(() => {
+    return state?.opportunities.find((item) => item.id === id) ?? null;
+  }, [state, id]);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!opportunity) return;
+  const existingApplication = useMemo(() => {
+    if (!state || !opportunity) return null;
 
-    const finalAnswers = opportunity.questions.map((question) => ({ question, answer: answers[question]?.trim() ?? "" }));
-    if (finalAnswers.some((item) => !item.answer) || !scenarioResponse.trim() || !proofUrl.trim()) {
-      setError("Fill in all answers, scenario response, and proof item.");
-      return;
-    }
+    return (
+      state.applications.find(
+        (application) => application.opportunityId === opportunity.id
+      ) ?? null
+    );
+  }, [state, opportunity]);
 
-    submitFocusedApply({ opportunityId: opportunity.id, answers: finalAnswers, scenarioResponse, proofUrl });
-    router.push("/applicant/applications");
+  if (!state) {
+    return (
+      <main className="page">
+        <div className="container">
+          <LoadingState label="Loading opportunity details" />
+        </div>
+      </main>
+    );
   }
 
-  if (!state) return <main className="page"><div className="container">Loading...</div></main>;
-
   if (!opportunity) {
-    return <main className="page"><div className="container card">Opportunity not found.</div></main>;
+    return (
+      <main className="page">
+        <div className="container">
+          <EmptyState
+            title="Opportunity not found"
+            description="Return to discovery and choose an available role."
+            action={
+              <Link className="btn" href="/applicant/opportunities">
+                Back to opportunities
+              </Link>
+            }
+          />
+        </div>
+      </main>
+    );
   }
 
   return (
     <main className="page">
       <div className="container stack-lg">
-        <Link className="btn secondary" href="/applicant/opportunities">← Back to opportunities</Link>
+        <div className="row">
+          <Link className="btn secondary" href="/applicant/opportunities">
+            ← Back to opportunities
+          </Link>
 
-        <section className="grid grid-main-side">
-          <div className="stack-lg">
-            <div className="stack">
-              <p className="eyebrow">Step 2</p>
-              <h1>{opportunity.title}</h1>
-              <p className="lead">{opportunity.description}</p>
-              <div className="row">
-                <Badge tone="accent">Focused Apply</Badge>
+          <Link className="btn secondary" href="/applicant/applications">
+            My applications
+          </Link>
+        </div>
+
+        <BlueprintEnvironment>
+          <section className="apply-detail-layout">
+            <div className="stack-lg">
+              <WorkSurface className="apply-hero">
+              <div className="apply-hero-top">
+                <div className="stack">
+                  <p className="eyebrow">Opportunity details</p>
+
+                  <h1 className="apply-title">{opportunity.title}</h1>
+
+                  <p className="lead">{opportunity.description}</p>
+                </div>
+
+                <div className="apply-company-mark">
+                  {state.company.name.slice(0, 1)}
+                </div>
+              </div>
+
+              <div className="apply-meta">
+                <Badge tone="accent">Apply with proof</Badge>
+                <Badge>Focused Apply</Badge>
                 <Badge>{opportunity.type}</Badge>
                 <Badge>{opportunity.workMode}</Badge>
+                <Badge>{opportunity.location}</Badge>
                 <Badge>Deadline {formatDate(opportunity.deadline)}</Badge>
+                {existingApplication ? (
+                  <StatusBadge tone="success">Already applied</StatusBadge>
+                ) : null}
               </div>
-            </div>
 
-            <div className="card stack">
-              <h3>Responsibilities</h3>
-              {opportunity.responsibilities.map((item) => <p key={item} className="muted">• {item}</p>)}
-            </div>
+              <section className="apply-section soft">
+                <h3>Skills required</h3>
 
-            <div className="card stack">
-              <h3>Requirements</h3>
-              {opportunity.requirements.map((item) => <p key={item} className="muted">• {item}</p>)}
-            </div>
+                <div className="row">
+                  {opportunity.skills.map((skill) => (
+                    <Badge key={skill}>{skill}</Badge>
+                  ))}
+                </div>
+              </section>
+              </WorkSurface>
+
+            <section className="grid grid-2">
+              <div className="apply-section">
+                <h3>What you will do</h3>
+
+                <div className="apply-list">
+                  {opportunity.responsibilities.map((item) => (
+                    <p key={item} className="apply-list-item">
+                      {item}
+                    </p>
+                  ))}
+                </div>
+              </div>
+
+              <div className="apply-section">
+                <h3>What they expect</h3>
+
+                <div className="apply-list">
+                  {opportunity.requirements.map((item) => (
+                    <p key={item} className="apply-list-item">
+                      {item}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <WorkSurface className="apply-mode-summary">
+              <div className="stack">
+                <h2>Apply with proof</h2>
+                <p className="muted">
+                  Focused Apply gives the employer structured answers, a short
+                  scenario response, and a proof item they can review.
+                </p>
+              </div>
+
+              <Link
+                className="btn apply-primary-action"
+                href={`/applicant/opportunities/${opportunity.id}/focused-apply`}
+              >
+                Continue to Apply with proof
+              </Link>
+            </WorkSurface>
           </div>
 
-          <aside className="card stack">
-            <h3>Company</h3>
-            <p><strong>{state.company.name}</strong></p>
-            <p className="muted">{state.company.description}</p>
-            <div className="row">{opportunity.skills.map((skill) => <Badge key={skill}>{skill}</Badge>)}</div>
+          <aside className="apply-side">
+            <WorkSurface className="apply-side-card">
+              <p className="eyebrow">Employer</p>
+              <h3>{state.company.name}</h3>
+              <p className="muted">{state.company.description}</p>
+
+              <div className="row">
+                <Badge>{state.company.industry}</Badge>
+                <Badge>{state.company.location}</Badge>
+              </div>
+            </WorkSurface>
+
+            <WorkSurface className="apply-side-card">
+              <div className="apply-proof-box">
+                <h3>Proof expectations</h3>
+                <p className="muted">
+                  Include a link the employer can open. Good proof can be a
+                  GitHub repository, portfolio page, shared document, school
+                  project, report, or screenshot folder.
+                </p>
+              </div>
+            </WorkSurface>
+
+            <WorkSurface className="apply-side-card">
+              <p className="eyebrow">Applicant profile</p>
+              <h3>{state.applicant.fullName}</h3>
+              <p className="muted">{state.applicant.education}</p>
+              <p className="muted">{state.applicant.school}</p>
+
+              <div className="row">
+                {state.applicant.skills.map((skill) => (
+                  <Badge key={skill}>{skill}</Badge>
+                ))}
+              </div>
+            </WorkSurface>
           </aside>
         </section>
+        </BlueprintEnvironment>
 
-        <form onSubmit={submit} className="card stack-lg">
-          <div className="stack">
-            <p className="eyebrow">Step 3</p>
-            <h2>Submit Focused Apply</h2>
-            <p className="muted">This is the main application path for the prototype: questions, scenario response, and proof item.</p>
-          </div>
+        <section id="focused-apply" className="apply-entry-grid">
+          <WorkSurface className="apply-mode-summary">
+            <div className="stack">
+              <p className="eyebrow">Primary application path</p>
+              <h2>Apply with proof</h2>
+              <p className="muted">
+                Answer employer questions, complete the scenario task, and add
+                a concrete proof item before submitting.
+              </p>
+            </div>
 
-          {opportunity.questions.map((question) => (
-            <label key={question}>
-              {question}
-              <textarea className="textarea" value={answers[question] ?? ""} onChange={(event) => setAnswers((prev) => ({ ...prev, [question]: event.target.value }))} />
-            </label>
-          ))}
+            <Link
+              className="btn apply-primary-action"
+              href={`/applicant/opportunities/${opportunity.id}/focused-apply`}
+            >
+              Start Apply with proof
+            </Link>
+          </WorkSurface>
 
-          <label>
-            Scenario task: {opportunity.scenarioTask}
-            <textarea className="textarea" value={scenarioResponse} onChange={(event) => setScenarioResponse(event.target.value)} />
-          </label>
+          <WorkSurface className="quick-apply-entry">
+            <div className="stack-sm">
+              <p className="eyebrow">Secondary option</p>
+              <h3>Quick Apply</h3>
+              <p className="muted">
+                Use your saved profile and CV preview. Apply with proof remains
+                the stronger option for this role.
+              </p>
+            </div>
 
-          <label>
-            Proof item: {opportunity.proofRequirement}
-            <input className="input" value={proofUrl} onChange={(event) => setProofUrl(event.target.value)} />
-          </label>
-
-          {error ? <p style={{ color: "var(--danger)" }}>{error}</p> : null}
-          <button className="btn" type="submit">Submit Focused Apply</button>
-        </form>
+            <Link
+              className="btn secondary"
+              href={`/applicant/opportunities/${opportunity.id}/quick-apply`}
+            >
+              Preview Quick Apply
+            </Link>
+          </WorkSurface>
+        </section>
       </div>
     </main>
   );

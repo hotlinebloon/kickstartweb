@@ -8,12 +8,22 @@ import {
   getProgress,
   getState,
   resetState,
+  saveState,
   updateApplication,
   type Application,
   type ApplicationStatus,
   type DemoState,
 } from "@/lib/demo-store";
-import { Badge, Progress, StatCard } from "@/components/ui";
+import {
+  Badge,
+  BlueprintEnvironment,
+  EmptyState,
+  LoadingState,
+  Progress,
+  StatCard,
+  StatusBadge,
+  WorkSurface,
+} from "@/components/ui";
 
 function getCurrentIndex(index: number, applications: Application[]) {
   if (applications.length === 0) return 0;
@@ -22,11 +32,27 @@ function getCurrentIndex(index: number, applications: Application[]) {
   return index;
 }
 
+type PendingDecision = Extract<ApplicationStatus, "accepted" | "rejected">;
+
+function getStatusTone(status: ApplicationStatus) {
+  if (status === "accepted") return "success";
+  if (status === "rejected") return "danger";
+  if (status === "shortlisted" || status === "under_review") return "info";
+  return "neutral";
+}
+
 export default function EmployerApplicantsPage() {
   const [state, setState] = useState<DemoState | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [notes, setNotes] = useState<Record<string, string>>({});
-  const [message, setMessage] = useState("");
+  const [notice, setNotice] = useState<{
+    text: string;
+    undoState?: DemoState;
+  } | null>(null);
+  const [pendingDecision, setPendingDecision] = useState<PendingDecision | null>(
+    null
+  );
+  const [decisionError, setDecisionError] = useState("");
 
   function load() {
     const current = getState();
@@ -74,7 +100,9 @@ export default function EmployerApplicantsPage() {
   if (!state) {
     return (
       <main className="page">
-        <div className="container">Loading...</div>
+        <div className="container">
+          <LoadingState label="Loading applicant review" />
+        </div>
       </main>
     );
   }
@@ -113,26 +141,68 @@ export default function EmployerApplicantsPage() {
     });
 
     setState(next);
+    setPendingDecision(null);
+    setDecisionError("");
 
     if (status === "accepted") {
-      setMessage("Applicant accepted. Placement and starter tasks were created.");
+      setNotice({
+        text: "Applicant accepted. Placement and starter tasks were created.",
+      });
     } else if (status === "shortlisted") {
-      setMessage("Applicant moved to Hold / Shortlisted.");
+      setNotice({ text: "Applicant moved to Shortlisted." });
     } else if (status === "rejected") {
-      setMessage("Applicant rejected.");
+      setNotice({ text: "Applicant rejected." });
     } else {
-      setMessage("Application moved under review.");
+      setNotice({ text: "Application moved under review." });
     }
   }
 
-  function makeDecision(status: ApplicationStatus) {
+  function startDecision(status: PendingDecision) {
     if (!application || application.status === "accepted") return;
 
-    setStatus(application.id, status);
+    setPendingDecision(status);
+    setDecisionError("");
+    setNotice(null);
+  }
 
-    if (safeIndex < applications.length - 1) {
-      setCurrentIndex(safeIndex + 1);
+  function confirmDecision() {
+    if (!application || !state || !pendingDecision) return;
+
+    const note = notes[application.id]?.trim() ?? "";
+
+    if (!note) {
+      setDecisionError("Add a note before confirming this decision.");
+      return;
     }
+
+    const undoState = state;
+    const next = updateApplication({
+      applicationId: application.id,
+      status: pendingDecision,
+      employerNote: note,
+    });
+
+    setState(next);
+    setPendingDecision(null);
+    setDecisionError("");
+
+    setNotice({
+      text:
+        pendingDecision === "accepted"
+          ? "Applicant accepted. Placement and starter tasks were created."
+          : "Applicant rejected. Their application status is now Rejected.",
+      undoState,
+    });
+  }
+
+  function undoDecision(undoState: DemoState) {
+    saveState(undoState);
+    setState(undoState);
+    setPendingDecision(null);
+    setDecisionError("");
+    setNotice({
+      text: "Decision undone. The previous application state was restored.",
+    });
   }
 
   function resetDemo() {
@@ -140,35 +210,51 @@ export default function EmployerApplicantsPage() {
     setState(reset);
     setCurrentIndex(0);
     setNotes({});
-    setMessage("Demo reset. Submit a Focused Apply as applicant first.");
+    setNotice({
+      text: "Review data reset. Submit an Apply with proof application first.",
+    });
+    setPendingDecision(null);
+    setDecisionError("");
   }
 
   return (
     <main className="page">
       <div className="container stack-lg">
-        <section className="between">
+        <section className="page-header between">
           <div className="stack">
             <p className="eyebrow">Employer review queue</p>
             <h1>Review applicants</h1>
             <p className="lead">
-              Review one structured application at a time. This keeps the
-              swipe-card idea, but uses buttons instead of dragging for better
-              performance.
+              Review one structured application at a time. Compare proof,
+              add notes, and make accountable hiring decisions.
             </p>
           </div>
 
           <div className="row">
             <button className="btn secondary" onClick={resetDemo}>
-              Reset demo
+              Reset data
             </button>
 
             <Link className="btn secondary" href="/employer/employees">
-              Employee progress
+              Monitor interns
             </Link>
           </div>
         </section>
 
-        {message ? <div className="notice">{message}</div> : null}
+        {notice ? (
+          <div className="notice notice-actions" role="status">
+            <span>{notice.text}</span>
+            {notice.undoState ? (
+              <button
+                className="btn secondary"
+                type="button"
+                onClick={() => notice.undoState && undoDecision(notice.undoState)}
+              >
+                Undo decision
+              </button>
+            ) : null}
+          </div>
+        ) : null}
 
         <section className="grid grid-4">
           <StatCard title="Total" description="Applications" value={stats.total} />
@@ -186,44 +272,48 @@ export default function EmployerApplicantsPage() {
         </section>
 
         {applications.length === 0 ? (
-          <section className="card stack">
-            <h3>No applications yet</h3>
-            <p className="muted">
-              Go through the applicant flow first: open an opportunity and
-              submit Focused Apply.
-            </p>
-
-            <Link className="btn" href="/applicant/opportunities">
-              Start applicant flow
-            </Link>
-          </section>
+          <EmptyState
+            title="No applications yet"
+            description="Go through the applicant flow first: open an opportunity and submit Apply with proof."
+            action={
+              <Link className="btn" href="/applicant/opportunities">
+                Start applicant flow
+              </Link>
+            }
+          />
         ) : (
-          <section className="card review-card">
-            <div className="between">
-              <div className="stack-sm">
-                <p className="eyebrow">
-                  Applicant {safeIndex + 1} of {applications.length}
-                </p>
+          <BlueprintEnvironment>
+            <WorkSurface className="review-card">
+              <div className="between">
+                <div className="stack-sm">
+                  <p className="eyebrow">
+                    Applicant {safeIndex + 1} of {applications.length}
+                  </p>
 
-                <h2>{application.applicantSnapshot.fullName}</h2>
+                  <h2>{application.applicantSnapshot.fullName}</h2>
 
-                <p className="muted">
-                  {opportunity?.title ?? "Unknown opportunity"} ·{" "}
-                  {state.company.name} · submitted{" "}
-                  {formatDate(application.submittedAt)}
-                </p>
+                  <p className="muted">
+                    {opportunity?.title ?? "Unknown opportunity"} ·{" "}
+                    {state.company.name} · submitted{" "}
+                    {formatDate(application.submittedAt)}
+                  </p>
+                </div>
+
+                <div className="row">
+                  <Badge tone="accent">Apply with proof</Badge>
+                  <Badge>Focused Apply</Badge>
+                  <StatusBadge tone={getStatusTone(application.status)}>
+                    {getApplicationStatusLabel(application.status)}
+                  </StatusBadge>
+                  {placement ? (
+                    <StatusBadge tone="success">Placement created</StatusBadge>
+                  ) : null}
+                </div>
               </div>
 
-              <div className="row">
-                <Badge tone="accent">Focused Apply</Badge>
-                <Badge>{getApplicationStatusLabel(application.status)}</Badge>
-                {placement ? <Badge tone="success">Placement created</Badge> : null}
-              </div>
-            </div>
-
-            <div className="grid grid-main-side">
-              <div className="stack-lg">
-                <section className="review-section stack">
+              <div className="grid grid-main-side">
+                <div className="stack-lg">
+                  <section className="review-section review-evidence-section stack">
                   <div className="between">
                     <div>
                       <h3>Applicant profile</h3>
@@ -264,13 +354,15 @@ export default function EmployerApplicantsPage() {
                       <Badge key={skill}>{skill}</Badge>
                     ))}
                   </div>
-                </section>
+                  </section>
 
-                <section className="review-section stack">
+                  <section className="review-section review-evidence-section stack">
                   <div className="between">
                     <div>
-                      <h3>Focused Apply answers</h3>
-                      <p className="muted">More signal than a generic CV.</p>
+                      <h3>Apply with proof answers</h3>
+                      <p className="muted">
+                        Proof, motivation, and scenario thinking in one place.
+                      </p>
                     </div>
 
                     <Badge tone="accent">Structured review</Badge>
@@ -286,15 +378,15 @@ export default function EmployerApplicantsPage() {
                       </div>
                     ))}
                   </div>
-                </section>
+                  </section>
 
                 <div className="grid grid-2">
-                  <section className="review-section stack">
+                  <section className="review-section review-evidence-section stack">
                     <h3>Scenario response</h3>
                     <p className="muted">{application.scenarioResponse}</p>
                   </section>
 
-                  <section className="review-section stack">
+                  <section className="review-section review-evidence-section stack">
                     <h3>Proof item</h3>
                     <p className="muted" style={{ wordBreak: "break-all" }}>
                       {application.proofUrl}
@@ -308,8 +400,8 @@ export default function EmployerApplicantsPage() {
                       <div>
                         <h3>Placement created</h3>
                         <p className="muted">
-                          Starter tasks are now available on the employee task
-                          board.
+                          Starter tasks are now available in the intern
+                          workspace.
                         </p>
                       </div>
 
@@ -319,49 +411,116 @@ export default function EmployerApplicantsPage() {
                     <Progress value={progress.completionRate} />
 
                     <div className="row">
-                      <Link className="btn" href="/employee/tasks">
-                        Open employee tasks
-                      </Link>
-
                       <Link className="btn secondary" href="/employer/employees">
-                        Review progress
+                        Monitor intern progress
                       </Link>
                     </div>
                   </section>
-                ) : null}
-              </div>
+                  ) : null}
+                </div>
 
               <aside className="decision-panel">
-                <section className="review-section stack">
+                <section className="review-section decision-section stack">
                   <div className="stack-sm">
-                    <p className="eyebrow">Employer-only card review</p>
-                    <h3>Quick decision, structured review</h3>
+                    <h3>Decision review</h3>
                     <p className="muted">
-                      This keeps the swipe-style card idea without the
-                      performance cost of real dragging.
+                      Add a note, then shortlist, accept, or reject with a
+                      confirmed decision.
                     </p>
                   </div>
 
-                  <label>
-                    Employer note
+                  <label htmlFor="employer-note">
+                    Employer note (required for accept or reject)
                     <textarea
+                      id="employer-note"
                       className="textarea"
+                      aria-describedby={
+                        pendingDecision
+                          ? decisionError
+                            ? "decision-note-help decision-note-error"
+                            : "decision-note-help"
+                          : "decision-note-help"
+                      }
+                      aria-invalid={Boolean(decisionError)}
                       value={notes[application.id] ?? ""}
-                      onChange={(event) =>
+                      onChange={(event) => {
                         setNotes((prev) => ({
                           ...prev,
                           [application.id]: event.target.value,
-                        }))
-                      }
+                        }));
+                        if (decisionError) setDecisionError("");
+                      }}
                       placeholder="Strong project, good motivation..."
                     />
                   </label>
+                  <p id="decision-note-help" className="help-text">
+                    Add the reason behind the decision so the review stays
+                    accountable.
+                  </p>
+
+                  {pendingDecision ? (
+                    <section
+                      className="decision-confirm stack"
+                      aria-labelledby="decision-confirm-title"
+                    >
+                      <div className="stack-sm">
+                        <p className="eyebrow">Confirm decision</p>
+                        <h3 id="decision-confirm-title">
+                          {pendingDecision === "accepted"
+                            ? "Confirm accept"
+                            : "Confirm reject"}
+                        </h3>
+                        <p className="muted">
+                          {application.applicantSnapshot.fullName} will be marked{" "}
+                          <strong>
+                            {pendingDecision === "accepted"
+                              ? "Accepted"
+                              : "Rejected"}
+                          </strong>
+                          .{" "}
+                          {pendingDecision === "accepted"
+                            ? "This creates the accepted intern flow with a placement and starter tasks."
+                            : "Their application status will become Rejected."}
+                        </p>
+                      </div>
+
+                      {decisionError ? (
+                        <p id="decision-note-error" className="field-error">
+                          {decisionError}
+                        </p>
+                      ) : null}
+
+                      <div className="row">
+                        <button
+                          className="btn secondary"
+                          type="button"
+                          onClick={() => {
+                            setPendingDecision(null);
+                            setDecisionError("");
+                          }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          className={
+                            pendingDecision === "rejected" ? "btn danger" : "btn"
+                          }
+                          type="button"
+                          onClick={confirmDecision}
+                        >
+                          {pendingDecision === "accepted"
+                            ? "Confirm accept"
+                            : "Confirm reject"}
+                        </button>
+                      </div>
+                    </section>
+                  ) : null}
 
                   <div className="action-grid">
                     <button
                       className="action-button reject"
                       disabled={application.status === "accepted"}
-                      onClick={() => makeDecision("rejected")}
+                      onClick={() => startDecision("rejected")}
                     >
                       Reject
                     </button>
@@ -371,13 +530,13 @@ export default function EmployerApplicantsPage() {
                       disabled={application.status === "accepted"}
                       onClick={() => setStatus(application.id, "shortlisted")}
                     >
-                      Hold
+                      Shortlist
                     </button>
 
                     <button
                       className="action-button accept"
                       disabled={application.status === "accepted"}
-                      onClick={() => makeDecision("accepted")}
+                      onClick={() => startDecision("accepted")}
                     >
                       Accept
                     </button>
@@ -410,9 +569,10 @@ export default function EmployerApplicantsPage() {
                 </section>
               </aside>
             </div>
-          </section>
+            </WorkSurface>
+          </BlueprintEnvironment>
         )}
       </div>
     </main>
   );
-}
+} 

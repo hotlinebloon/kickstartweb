@@ -54,12 +54,11 @@ export default function EmployerEmployeesPage() {
         <div className="container stack-lg">
           <section className="stack">
             <p className="eyebrow">Step 10</p>
-            <h1>No employee yet</h1>
-            <p className="lead">Accept an applicant first. Then this page will show their submitted tasks for review.</p>
+            <h1>No intern placement yet</h1>
+            <p className="lead">Accept an applicant first. Then this page will show submitted intern tasks for review.</p>
           </section>
           <div className="card row">
             <Link className="btn" href="/employer/applicants">Review applicants</Link>
-            <Link className="btn secondary" href="/applicant/opportunities">Submit application first</Link>
           </div>
         </div>
       </main>
@@ -74,10 +73,10 @@ export default function EmployerEmployeesPage() {
         <section className="between">
           <div className="stack">
             <p className="eyebrow">Step 10</p>
-            <h1>Employer reviews tasks</h1>
+            <h1>Monitor intern work</h1>
             <p className="lead">Review submitted work, add feedback, mark it completed, and update the progress profile.</p>
           </div>
-          <Link className="btn secondary" href="/employee/progress">Employee progress</Link>
+          <Link className="btn secondary" href="/employer/applicants">Back to applicants</Link>
         </section>
 
         <section className="card stack">
@@ -102,14 +101,13 @@ export default function EmployerEmployeesPage() {
           <div className="card stack-lg">
             <div>
               <h2>Tasks needing review</h2>
-              <p className="muted">These were submitted by the employee.</p>
+              <p className="muted">These were submitted by the intern.</p>
             </div>
 
             {reviewTasks.length === 0 ? (
               <div className="notice stack">
                 <strong>No tasks waiting for review.</strong>
-                <p className="muted">Go to the employee task board and submit a task to Needs Review.</p>
-                <Link className="btn secondary" href="/employee/tasks">Open employee tasks</Link>
+                <p className="muted">No intern submissions are waiting for employer review right now.</p>
               </div>
             ) : (
               reviewTasks.map((task) => (
@@ -119,7 +117,7 @@ export default function EmployerEmployeesPage() {
                     <Badge>{getTaskStatusLabel(task.status)}</Badge>
                   </div>
                   <p className="muted">{task.description}</p>
-                  {task.latestUpdate ? <p><strong>Employee update:</strong> {task.latestUpdate}</p> : null}
+                  {task.latestUpdate ? <p><strong>Intern update:</strong> {task.latestUpdate}</p> : null}
                   {task.submissionLink ? <p className="muted" style={{ wordBreak: "break-all" }}><strong>Submission:</strong> {task.submissionLink}</p> : null}
                   <label>
                     Feedback

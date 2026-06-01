@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-01T00:00:00+02:00",
+  "title": "Design System: Kickstart 11-Step Prototype",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "White Workspace",
+        "canonical": "#f2f7fd",
+        "tonalRamp": ["#ffffff", "#f6f9fc", "#edf4fb", "#d7e3ee"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Clean Surface",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#ffffff", "#f6f9fc", "#edf4fb"]
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "System Blue",
+        "canonical": "#2563eb",
+        "tonalRamp": ["rgba(37, 99, 235, 0.055)", "rgba(37, 99, 235, 0.08)", "#2563eb", "#1d4ed8"]
+      },
+      "blueprint": {
+        "role": "secondary",
+        "displayName": "Blueprint Blue",
+        "canonical": "#1e3a5f",
+        "tonalRamp": ["#f8fbff", "#e7f0fa", "rgba(30, 58, 95, 0.08)", "#1e3a5f"]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Growth Green",
+        "canonical": "#0f766e",
+        "tonalRamp": ["rgba(15, 118, 110, 0.055)", "rgba(15, 118, 110, 0.12)", "#0f766e"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Major page titles and brand-facing demo surfaces."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headers and prominent panel titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card, task, and review section headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Core interface text and descriptions."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Badges, form labels, navigation labels, and compact status text."
+      }
+    },
+    "elevation": {
+      "ambient-card": {
+        "boxShadow": "0 8px 20px rgba(30, 58, 95, 0.07)",
+        "purpose": "Major cards and feature panels only."
+      },
+      "flat-panel": {
+        "boxShadow": "none",
+        "purpose": "Nested surfaces, task cards, badges, inputs, and side panels."
+      }
+    },
+    "motion": {
+      "duration": {
+        "quick": "150ms",
+        "normal": "200ms"
+      },
+      "easing": {
+        "standard": "cubic-bezier(0.22, 1, 0.36, 1)"
+      },
+      "reducedMotion": "Any future motion must provide a prefers-reduced-motion alternative."
+    },
+    "breakpoints": {
+      "nav-and-grid-collapse": "620px",
+      "layout-collapse": "920px",
+      "wide-layout-collapse": "980px"
+    },
+    "componentMeta": {
+      "button": {
+        "character": "Pill-shaped, direct, and action-oriented.",
+        "states": ["default", "hover", "focus-visible", "disabled", "loading"]
+      },
+      "badge": {
+        "character": "Pill labels that name state explicitly.",
+        "states": ["default", "accent", "blue", "success", "warning", "danger"]
+      },
+      "card": {
+        "character": "Border-first product surfaces with soft tonal layering.",
+        "states": ["default", "soft", "active", "success", "warning", "danger"]
+      },
+      "task-board": {
+        "character": "Four-column progress board with labeled status columns and proof-oriented task cards.",
+        "states": ["havent_started", "working_on_it", "needs_review", "completed"]
+      }
+    },
+    "rules": {
+      "northStar": "The Growth Ledger",
+      "dos": [
+        "Keep workflows clear, role-aware, and task-first.",
+        "Use System Blue for action, focus, navigation, links, selected items, and progress.",
+        "Use the blueprint as the global web background, with clean white cards and forms above it.",
+        "Pair every status color with text, count, shape, or placement.",
+        "Use border and tonal layer before shadow."
+      ],
+      "donts": [
+        "Do not make Kickstart feel like generic SaaS, a childish app, swipe-app energy, a cluttered dashboard, or cold corporate software.",
+        "Do not use red as the general brand accent; reserve it for reject, delete, error, danger, and critical warnings.",
+        "Do not put blueprint texture inside every application card or form.",
+        "Do not rely only on color for application, task, review, or progress states.",
+        "Do not use decorative gradients, glassmorphism, marketing metric blocks, repeated uppercase eyebrows, or side-stripe callouts as default patterns."
+      ]
+    }
+  }
+}

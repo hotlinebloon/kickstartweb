@@ -78,7 +78,7 @@ export function KickstartLogo() {
         cy="27"
         r="6"
         fill="none"
-        stroke="rgba(214, 45, 45, 0.25)"
+        stroke="rgba(37, 99, 235, 0.25)"
         strokeWidth="2"
         strokeDasharray="3 3"
       />
