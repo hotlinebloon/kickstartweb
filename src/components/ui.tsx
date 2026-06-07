@@ -34,7 +34,14 @@ export function Progress({ value }: { value: number }) {
   const safeValue = Math.max(0, Math.min(100, Number(value) || 0));
 
   return (
-    <div className="progress" aria-label={`Progress ${safeValue}%`}>
+    <div
+      className="progress"
+      role="progressbar"
+      aria-label={`Progress ${safeValue}%`}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={safeValue}
+    >
       <span style={{ width: `${safeValue}%` }} />
     </div>
   );
@@ -74,14 +81,14 @@ export function WorkSurface({
   );
 }
 
-export function BlueprintEnvironment({
+export function ProductEnvironment({
   children,
   className = "",
 }: {
   children: ReactNode;
   className?: string;
 }) {
-  return <section className={`blueprint-environment ${className}`}>{children}</section>;
+  return <section className={`product-environment ${className}`}>{children}</section>;
 }
 
 export function LoadingState({ label = "Loading workspace" }: { label?: string }) {
@@ -105,9 +112,6 @@ export function EmptyState({
 }) {
   return (
     <section className="state-surface">
-      <div className="state-icon" aria-hidden="true">
-        KS
-      </div>
       <div className="stack-sm">
         <h2>{title}</h2>
         <p className="muted">{description}</p>

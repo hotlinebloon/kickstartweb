@@ -1,9 +1,11 @@
 {
-  "name": "kickstart-11-step-prototype",
+  "name": "kickstart-intern-growth-platform",
+  "description": "Employer-first intern hiring and development platform.",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
+    "dev:turbopack": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint ."

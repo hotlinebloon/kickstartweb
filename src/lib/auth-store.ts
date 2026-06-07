@@ -11,7 +11,7 @@ const AUTH_STORAGE_KEY = "kickstart_demo_user";
 
 export function getDefaultRedirect(role: DemoRole) {
   if (role === "applicant") return "/applicant/opportunities";
-  return "/employer/applicants";
+  return "/employer/opportunities";
 }
 
 function canUseStorage() {

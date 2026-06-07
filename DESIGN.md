@@ -1,247 +1,151 @@
 ---
-name: Kickstart 11-Step Prototype
-description: White-and-blue intern matching product on a full blueprint workspace background.
+name: Kickstart Precision Growth
+description: Employer-first intern hiring and development platform with a clean, structured, future-facing identity.
 colors:
-  background: "#f2f7fd"
+  background: "#ffffff"
   surface: "#ffffff"
-  surface-muted: "#edf4fb"
-  text: "#181716"
-  muted: "#53677d"
-  border: "#d7e3ee"
-  primary: "#2563eb"
-  primary-dark: "#1d4ed8"
-  blueprint: "#1e3a5f"
-  danger: "#b91c1c"
-  success: "#0f766e"
-  warning: "#92400e"
-typography:
-  display:
-    fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-    fontSize: "clamp(2.2rem, 5vw, 4.2rem)"
-    fontWeight: 800
-    lineHeight: 1
-    letterSpacing: "-0.05em"
-  headline:
-    fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-    fontSize: "clamp(1.8rem, 3vw, 2.6rem)"
-    fontWeight: 800
-    lineHeight: 1.05
-    letterSpacing: "-0.04em"
-  title:
-    fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-    fontSize: "1.1rem"
-    fontWeight: 750
-    lineHeight: 1.25
-    letterSpacing: "-0.02em"
-  body:
-    fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-    fontSize: "1rem"
-    fontWeight: 400
-    lineHeight: 1.55
-  label:
-    fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-    fontSize: "0.9rem"
-    fontWeight: 650
-    lineHeight: 1.2
-rounded:
-  input: "12px"
-  compact-card: "14px"
-  panel: "16px"
-  card: "18px"
-  feature-card: "24px"
-  hero-card: "26px"
-  pill: "999px"
-spacing:
-  xs: "0.35rem"
-  sm: "0.65rem"
-  md: "1rem"
-  lg: "1.5rem"
-  page-y: "42px"
-  page-x: "20px"
-components:
-  button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "#ffffff"
-    rounded: "{rounded.pill}"
-    padding: "0.65rem 1rem"
-    height: "38px"
-  button-secondary:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.text}"
-    rounded: "{rounded.pill}"
-    padding: "0.65rem 1rem"
-    height: "38px"
-  badge-default:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.muted}"
-    rounded: "{rounded.pill}"
-    padding: "0.35rem 0.65rem"
-  card:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.text}"
-    rounded: "{rounded.card}"
-    padding: "1.15rem"
-  input:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.text}"
-    rounded: "{rounded.input}"
-    padding: "0.75rem 0.9rem"
-    height: "42px"
+  ink: "#1f2421"
+  blueprint: "#6c91c2"
 ---
 
-# Design System: Kickstart 11-Step Prototype
+# Kickstart Precision Growth
 
-## 1. Overview
+## North Star
 
-**Creative North Star: "The Growth Ledger"**
+Kickstart is a professional platform where applicants prove their potential and employers develop promising interns into future hires. The interface should help applicants present meaningful evidence and help hiring managers compare that evidence, make a decision, and follow growth after acceptance.
 
-Kickstart should feel like a clear operating surface for paid opportunities and intern development. The system records decisions, proof, task movement, and progress with a serious but human tone. Employers should trust it enough to post and pay; applicants should understand what evidence helps them move forward.
+The visual foundation is clean and highly structured, inspired by Behamics. White and deep green-black `#1f2421` establish precision. Blueprint blue `#6c91c2` appears when applicants commit to a role and when employers make a decision.
 
-The redesigned direction is a white-and-blue product shell on top of a full blueprint workspace background. The blueprint is the environment of the web, suggesting structured matching and planning. Application cards, forms, and decision panels should stay clean, white, and readable above that background.
+## Identity
 
-**Key Characteristics:**
+The brand mark is a custom touching `KS.` wordmark. It should feel precise, compact, and credible at navigation and favicon sizes. The dot carries the blueprint-blue accent.
 
-- Restrained white-and-blue product palette with blue reserved for primary actions, navigation, active states, links, and focus.
-- Rounded but structured containers, usually 14px to 18px, with larger radii only on hero or feature cards.
-- Dense enough for dashboards, but organized into clear role-based flows.
-- Status language must pair color with words, counts, shape, or position.
-- The blueprint background is visible across the app, while content surfaces stay white and serious.
+## Visual System
 
-## 2. Colors
+- White surfaces and `#1f2421` typography dominate.
+- Blueprint blue owns commitment, decisions, progress, links, and identity markers.
+- Full `#6c91c2` is reserved for decisive moments; selected rows, supporting summaries, and routine context use blue-tinted surfaces.
+- Primary actions use `#1f2421` so blueprint blue remains meaningful instead of becoming a default button color.
+- Focused and profile application workspaces use a blueprint grid behind white working surfaces.
+- Employer applicant review stays white and evidence-first; only the decision control becomes blueprint blue.
+- Status meaning always includes labels or symbols, never color alone.
+- Restrained green, amber, and red accents may clarify success, attention, and destructive states. They remain limited to status and action feedback rather than decorative surfaces.
+- Fine dividers, alignment, and whitespace establish hierarchy.
+- Shadows are minimal and functional.
+- Corners are compact and consistent.
+- Status badges use readable text plus semantic color.
 
-The palette is a white-and-blue product system. Blue is the main system color; red is reserved for destructive or negative actions.
+## Boldness Strategy
 
-### Primary
+Precision Growth should feel confident rather than quiet.
 
-- **System Blue** (`#2563eb`): Primary buttons, active route buttons, links, focus rings, selected items, progress fills, and focused application states.
-- **Deep System Blue** (`#1d4ed8`): Hover state for primary actions and strong selected-state text.
+- The public hero is a full-width blueprint-blue brand moment that gives applicant opportunity and employer value equal prominence.
+- Blueprint blue owns primary momentum and the strongest active states.
+- Major page headers use confident type, a fine baseline, and enough vertical space to orient the user without competing with the workflow.
+- Application and decision focal surfaces use strong black frames and committed blueprint-blue states.
+- Dense workflows amplify the current task, selected record, and primary action while keeping supporting information restrained.
+- Empty states, active placements, and monitoring summaries use stronger scale jumps so the next action remains obvious.
+- Routine controls and supporting records remain restrained so the important moments retain impact.
+- Motion is limited to purposeful state feedback, such as an opportunity row shifting slightly when actively explored.
 
-### Secondary
+## Layout
 
-- **Blueprint Blue** (`#1e3a5f`): Global blueprint background lines, matching-workspace identity, and deeper blue supporting marks.
+- Every screen has one obvious primary purpose.
+- Marketing surfaces use generous whitespace and disciplined asymmetric grids.
+- Authenticated workflows use predictable grids, rows, and familiar controls.
+- Opportunity and applicant records are comparable list entries, not decorative mixed card layouts.
+- Deep green-black sections are reserved for lifecycle stories, orientation, and important summaries.
+- Use cards only for distinct actionable records.
 
-### Tertiary
+### Spacing And Rhythm
 
-- **Growth Green** (`#0f766e`): Accepted placements, completed tasks, approved proof, and positive progress states.
-- **Warning Brown** (`#92400e`): Warning badges where attention is needed without implying failure.
-- **Danger Red** (`#b91c1c`): Reject, delete, error, danger, and critical warning actions only.
+- Use the shared 4px-based spacing scale from `--space-2xs` through `--space-3xl`.
+- Keep related content tight at 8px to 16px.
+- Separate major workflow sections by 32px to 48px.
+- Separate major marketing sections with fluid 48px to 96px spacing.
+- Page headers use one consistent two-column structure: purpose and description on the left, actions or filters on the right.
+- Dense boards, tables, task records, and form controls use tighter product spacing than marketing surfaces.
 
-### Neutral
+### Page Structures
 
-- **White Workspace** (`#f6f9fc`): Body background and quiet product shell.
-- **Clean Surface** (`#ffffff`): Primary card, input, badge, button, and panel background.
-- **Blue-Tinted Surface** (`#edf4fb`): Secondary panels, task columns, progress tracks, and soft cards.
-- **Near Black Ink** (`#181716`): Primary text.
-- **Operational Muted Text** (`#68635c`): Secondary text, descriptions, helper copy, and ghost buttons.
-- **Soft Divider** (`#ded6cb`): Borders, dividers, input strokes, and card boundaries.
+- Employer and applicant workflow pages use a maximum content width of 76rem.
+- Each workflow page gives one primary task the full readable width.
+- Context sidebars are reserved for information required to complete the primary task, such as employer identity on an opportunity detail or decision controls during applicant review.
+- Forms use one wide readable column with clearly separated steps. They do not repeat opportunity or profile details already shown in the flow.
+- Mobile layouts recompose structurally into one column. Task boards retain horizontal scrolling because column order carries meaning.
 
-### Named Rules
+## Typography
 
-**The Status Pairing Rule.** Never communicate state with color alone. Pair red, blue, green, warning, and danger with visible labels, counts, placement, or icons.
+Use one clean sans-serif family with clear weight contrast. Headings are concise and confident. Product labels remain familiar and quiet. Body copy stays under 75 characters per line and avoids HR jargon.
 
-**The Destructive Red Rule.** Red is not the brand accent. Use it only for reject, delete, error, danger, and critical warnings.
+### Homepage Typography
 
-**The Blueprint Environment Rule.** The web background can be blueprint. The application itself should not become dark: cards, forms, tables, and decision panels remain white or blue-tinted.
+The homepage has a distinct marketing display voice while authenticated product UI remains in the standard product sans.
 
-## 3. Typography
+- Employer-facing display statements use a confident condensed grotesque stack led by Nimbus Sans Narrow.
+- Evidence labels, process numbers, and compact marketing context use the product sans at smaller, firmer weights.
+- Interface previews retain the standard product sans so they read as real product surfaces.
 
-**Display Font:** Inter with system sans fallbacks  
-**Body Font:** Inter with system sans fallbacks  
-**Label/Mono Font:** Inter with system sans fallbacks
+### Homepage Layout
 
-**Character:** The type system is direct, compact, and product-oriented. Heavy weights give headings confidence, while body and muted text stay plain enough for repeated operational use.
+- The homepage uses one blueprint narrative from potential to proven talent.
+- The hero pairs one compact message block with one candidate record; neither should float in unused space.
+- Lifecycle stages keep copy and interface previews aligned on desktop, then recompose into a readable single column before tablet widths become cramped.
+- Related interface content stays tight, while the hero, lifecycle, and final output use generous separation.
+- Hero messaging is composed in intentional line-level beats rather than relying on browser wrapping.
+- Display headings use tight but readable line-height and never exceed the 6rem ceiling.
+- Blueprint blue may emphasize one meaningful display line, not individual decorative words.
+- Light text on `#1f2421` uses slightly increased line-height, tracking, and weight.
+- Homepage leads stay between 48ch and 50ch.
+- Evidence previews keep the product sans, stronger title weight, and tabular numerals.
 
-### Hierarchy
+## Components
 
-- **Display** (800+, `clamp(2.2rem, 5vw, 4.2rem)`, line-height `1`): Home page and major page titles.
-- **Headline** (800+, `clamp(1.8rem, 3vw, 2.6rem)`, line-height `1.05`): Section headers, large panel titles, and feature-card headings.
-- **Title** (750, `1.1rem`, line-height `1.25`): Card titles, task names, review section headings, and compact panel headings.
-- **Body** (400, `1rem`, line-height around `1.55`): Interface copy, answers, descriptions, and task content. Keep prose around 65 to 75 characters per line where possible.
-- **Lead** (400, `1.05rem`, line-height `1.65`): Introductory text on page headers.
-- **Label** (650 to 800, `0.75rem` to `0.9rem`): Form labels, nav labels, badges, and short status text.
+- Primary button: `#1f2421` fill, white label, blueprint-blue hover.
+- Bold primary button: blueprint-blue fill with `#1f2421` text; `#1f2421` on hover.
+- Secondary button: white fill, fine neutral border.
+- Inputs: white surface, compact radius, visible focus ring.
+- Navigation: neutral white sticky masthead with a compact `KS.` signature, precise dividers, a restrained blue active state, and one black employer action. It should frame the product professionally rather than behave like a marketing banner.
+- Progress: slim blueprint-blue track.
+- Lifecycle: restrained `#1f2421` section with a connected horizontal sequence.
+- Records: aligned rows with metadata, evidence, status, and a clear action.
 
-### Named Rules
+## Guardrails
 
-**The Product Scale Rule.** Use fixed, repeatable type sizes for app screens. Fluid display type is acceptable on the home page and opportunity detail hero, but not inside dense dashboards.
+- No noticeboard, poster, art-publication, collage, or discography styling.
+- No generic SaaS metric hero, glass panels, purple gradients, or identical feature-card grids.
+- No decorative offset shadows, rotations, textures, or stamp labels.
+- No indiscriminate boldness. `#1f2421`, `#6c91c2`, and oversized type must identify a real focal point.
+- No color-only status meaning.
+- Applicants can always browse every open opportunity.
+- Employer value and future talent development lead the product narrative.
 
-**The Label Restraint Rule.** Uppercase tracked labels are allowed for short flow markers and badges, but do not put an eyebrow above every section by habit.
+## Route Application
 
-## 4. Elevation
+- `/`: Balanced applicant-and-employer marketing surface with a clear shared value proposition, applicant evidence preview, connected lifecycle, development proof, and actions for both audiences.
+- `/employer/opportunities`: Employer starting workspace for creating roles, managing lifecycle state, and understanding applicant interest.
+- `/employer/applicants`: Evidence-first applicant review with deliberate decisions and clear notes.
+- `/employer/employees`: Action-first development queue for submitted work, overdue activity, and mentor attention.
+- `/applicant/opportunities`: Search-led opportunity list with optional secondary filters and no skip restrictions.
+- `/applicant/applications`: Clear status, submitted evidence, and next actions.
+- `/employee/tasks`: Familiar task workflow focused on delivery and review.
+- `/employee/progress`: Development record connecting work, feedback, and future value.
+- `/login` and `/register`: Structured role entry with employers visually prioritized.
 
-Kickstart uses a hybrid of borders, tonal layering, and one light ambient shadow. Most surfaces are defined by `1px` borders and background contrast. Shadows are soft and low-contrast, used on major cards or feature panels rather than every nested element.
+## Distillation Decisions
 
-### Shadow Vocabulary
+- Opportunity discovery leads with search, filters, and the opportunity list. Summary metrics do not interrupt browsing.
+- Application and apply routes avoid repeating opportunity, profile, status, or next-action context in sidebars.
+- Employer development monitoring keeps the intern queue, selected record, and review controls in the main flow. Historical summaries use progressive disclosure.
+- Intern task and development routes avoid duplicate status summaries. The task board and development record remain the source of truth.
+- Secondary information is removed when it does not change the next decision.
 
-- **Ambient Card Shadow** (`box-shadow: 0 8px 20px rgba(30, 58, 95, 0.07)`): Use on major cards such as application cards, growth hero cards, profile heroes, and prominent discovery or apply panels.
-- **Flat Panel** (`box-shadow: none`): Use for nested cards, task columns, badges, inputs, side panels, and review sections.
+## Decision History
 
-### Named Rules
+An early blueprint treatment was rejected because blue spread across the entire product and weakened hierarchy.
 
-**The Border-First Rule.** Default to border and tonal layer before adding shadow. Avoid pairing a `1px` border with a wide decorative shadow on every repeated card.
+A creative opportunity-noticeboard direction was then explored. Its energy and plain-language copy were useful, but poster layouts, offset shadows, stamps, rotations, and mixed card compositions made the company feel like an art publication.
 
-## 5. Components
+The confirmed system is Precision Growth: clean Behamics-inspired structure, a dominant `#ffffff`, `#1f2421`, and `#6c91c2` palette, restrained semantic status accents, blueprint workspaces for serious applications and hiring decisions, stronger hierarchy, and a shared applicant-to-future-hire narrative.
 
-### Buttons
-
-- **Shape:** Fully pill-shaped (`999px`) with a minimum height of `38px`.
-- **Primary:** System Blue background (`#2563eb`), white text, `0.65rem 1rem` padding, heavy label weight.
-- **Hover / Focus:** Primary hover deepens to `#1d4ed8`. Use a visible blue focus ring for keyboard navigation.
-- **Secondary:** Clean Surface background, Soft Divider border, Near Black Ink text.
-- **Ghost:** Transparent background with muted text, used mainly for inactive nav links and lower-priority actions.
-- **Danger:** Danger Red for destructive actions only.
-
-### Chips
-
-- **Style:** Pill badges with `1px` borders, subtle tinted backgrounds, and bold text.
-- **State:** Default badges are neutral. Accent, blue, success, warning, and danger badges must include text that names the state.
-
-### Cards / Containers
-
-- **Corner Style:** Standard cards use `18px`; nested cards use `14px` to `16px`; feature and hero cards use `24px` to `26px`.
-- **Background:** Clean Surface for primary content, Muted Surface for supporting columns and soft grouping.
-- **Shadow Strategy:** Only major cards receive the ambient card shadow.
-- **Border:** Soft Divider is the default border. Tinted borders may be used for active, success, warning, or danger states.
-- **Internal Padding:** Compact panels use `0.85rem` to `1rem`; main cards use `1.15rem` to `1.35rem`.
-
-### Inputs / Fields
-
-- **Style:** Clean Surface background, Soft Divider border, `12px` radius, `42px` minimum height, and `0.75rem 0.9rem` padding.
-- **Focus:** Currently neutral. Add a visible focus-visible outline or ring before shipping.
-- **Error / Disabled:** Use explicit error text and disabled affordances, not color alone.
-
-### Navigation
-
-- **Style:** Sticky top navigation with Warm Workspace background, Soft Divider bottom border, two-row structure, and role-aware links.
-- **Typography:** Logo is heavy and tight. Flow label is uppercase and compact. Active nav links use the primary button style, inactive links use ghost buttons.
-- **Mobile Treatment:** Links wrap rather than collapse. Future polish should consider a denser mobile nav once route count grows.
-
-### Task Boards and Status Flows
-
-- **Task Columns:** Muted Surface background, `16px` to `20px` radius, `1px` border, minimum column widths, and horizontal overflow for four-column boards.
-- **Task Cards:** Clean Surface, `14px` to `16px` radius, border-first depth.
-- **Progress:** `10px` pill track in Muted Surface with Kickstart Red fill.
-- **Timeline:** Numbered or state dots can use tinted success or active backgrounds, but must stay paired with labels and content.
-
-## 6. Do's and Don'ts
-
-### Do:
-
-- **Do** keep the product register first: clear workflows, direct labels, familiar controls, and role-aware navigation.
-- **Do** use `#2563eb` for primary actions, active states, selected items, links, focus rings, and progress.
-- **Do** keep the global web background in the blueprint system and place clean white application cards above it.
-- **Do** pair every status color with readable text, counts, shape, or placement for color-blind-safe understanding.
-- **Do** use borders and tonal layers as the default depth system.
-- **Do** keep dashboards scannable with visible section grouping, concise labels, and consistent card anatomy.
-- **Do** target WCAG AA contrast and add reduced-motion alternatives for any future animation.
-
-### Don't:
-
-- **Don't** make Kickstart feel like generic SaaS, a childish app, swipe-app energy, a cluttered dashboard, or cold corporate software.
-- **Don't** use red as a general accent. Red is only for reject, delete, error, danger, or critical warnings.
-- **Don't** put the blueprint texture inside every application card or form. The background carries it; the content surfaces stay clean.
-- **Don't** rely only on color for application states, task states, review decisions, or progress signals.
-- **Don't** use decorative gradients, glassmorphism, or marketing-style hero metric blocks as the product vocabulary.
-- **Don't** overuse uppercase tracked eyebrows above every section.
-- **Don't** use side-stripe borders as a default callout pattern. Existing proof and rule boxes should be replaced with full borders, icons, or labeled callouts during polish.
-- **Don't** push card radius past `26px` in this system. Most product surfaces should stay between `12px` and `18px`.
-- **Don't** add display fonts to labels, buttons, badges, tables, or task boards.
+`src/app/globals.css` is the authoritative styling layer for the shared platform and product workflows.

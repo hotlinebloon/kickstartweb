@@ -7,29 +7,17 @@ import { useParams } from "next/navigation";
 import {
   formatDate,
   getState,
+  isApplicationFinal,
   submitFocusedApply,
   type DemoState,
 } from "@/lib/demo-store";
 import {
   Badge,
-  BlueprintEnvironment,
+  ProductEnvironment,
   EmptyState,
   LoadingState,
   StatusBadge,
-  WorkSurface,
 } from "@/components/ui";
-
-const defaultAnswerOne =
-  "I want to learn through real tasks and feedback instead of only submitting a CV.";
-
-const defaultAnswerTwo =
-  "I built a simple personal portfolio and a small event page for school.";
-
-const defaultAnswerThree =
-  "I want to improve React component structure and responsive design.";
-
-const defaultScenario =
-  "I would start by identifying the main goal, then break the work into small parts, build a first version, ask for feedback, and improve the result based on the review.";
 
 const scenarioFieldId = "scenario-response";
 const proofFieldId = "proof-url";
@@ -40,18 +28,34 @@ function answerFieldId(index: number) {
   return `answer-${index}`;
 }
 
+function readDraft(key: string) {
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw
+      ? (JSON.parse(raw) as {
+          answers?: Record<string, string>;
+          scenarioResponse?: string;
+          proofUrl?: string;
+        })
+      : null;
+  } catch {
+    window.localStorage.removeItem(key);
+    return null;
+  }
+}
+
 export default function FocusedApplyPage() {
   const params = useParams();
   const id = String(params.id);
 
   const [state, setState] = useState<DemoState | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [scenarioResponse, setScenarioResponse] = useState(defaultScenario);
-  const [proofUrl, setProofUrl] = useState(
-    "https://github.com/arta-demo/landing-page"
-  );
+  const [scenarioResponse, setScenarioResponse] = useState("");
+  const [proofUrl, setProofUrl] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const errorSummaryRef = useRef<HTMLDivElement>(null);
+  const submittedRef = useRef(false);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     const current = getState();
@@ -60,20 +64,48 @@ export default function FocusedApplyPage() {
     setState(current);
 
     if (opportunity) {
-      setAnswers(
-        Object.fromEntries(
-          opportunity.questions.map((question, index) => [
-            question,
-            index === 0
-              ? defaultAnswerOne
-              : index === 1
-                ? defaultAnswerTwo
-                : defaultAnswerThree,
-          ])
-        )
+      const existing = current.applications.find(
+        (application) =>
+          application.opportunityId === opportunity.id &&
+          application.applicantId === current.applicant.id
       );
+      const draftKey = `kickstart_application_draft_${opportunity.id}`;
+      const draft = readDraft(draftKey);
+      setAnswers(
+        draft?.answers ??
+          Object.fromEntries(
+            opportunity.questions.map((question) => [
+              question,
+              existing?.answers.find((answer) => answer.question === question)?.answer ?? "",
+            ])
+          )
+      );
+      setScenarioResponse(draft?.scenarioResponse ?? existing?.scenarioResponse ?? "");
+      setProofUrl(draft?.proofUrl ?? existing?.proofUrl ?? "");
+      initializedRef.current = true;
     }
   }, [id]);
+
+  useEffect(() => {
+    if (!initializedRef.current) return;
+    window.localStorage.setItem(
+      `kickstart_application_draft_${id}`,
+      JSON.stringify({ answers, scenarioResponse, proofUrl })
+    );
+  }, [answers, scenarioResponse, proofUrl, id]);
+
+  useEffect(() => {
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      const hasDraft =
+        Object.values(answers).some((answer) => answer.trim()) ||
+        scenarioResponse.trim() ||
+        proofUrl.trim();
+      if (!hasDraft || submittedRef.current) return;
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", warnBeforeLeaving);
+    return () => window.removeEventListener("beforeunload", warnBeforeLeaving);
+  }, [answers, scenarioResponse, proofUrl]);
 
   const opportunity = useMemo(() => {
     return state?.opportunities.find((item) => item.id === id) ?? null;
@@ -84,7 +116,9 @@ export default function FocusedApplyPage() {
 
     return (
       state.applications.find(
-        (application) => application.opportunityId === opportunity.id
+        (application) =>
+          application.opportunityId === opportunity.id &&
+          application.applicantId === state.applicant.id
       ) ?? null
     );
   }, [state, opportunity]);
@@ -123,7 +157,15 @@ export default function FocusedApplyPage() {
 
     if (!proofUrl.trim()) {
       nextErrors[proofFieldId] =
-        "Add a proof link the employer can open.";
+        "Add a work sample link the employer can open.";
+    } else {
+      try {
+        const url = new URL(proofUrl);
+        if (!["http:", "https:"].includes(url.protocol)) throw new Error();
+      } catch {
+        nextErrors[proofFieldId] =
+          "Enter a complete link starting with https:// or http://.";
+      }
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -143,6 +185,8 @@ export default function FocusedApplyPage() {
       proofUrl,
     });
 
+    submittedRef.current = true;
+    window.localStorage.removeItem(`kickstart_application_draft_${opportunity.id}`);
     window.location.assign("/applicant/applications");
   }
 
@@ -150,7 +194,7 @@ export default function FocusedApplyPage() {
     return (
       <main className="page">
         <div className="container">
-          <LoadingState label="Loading Apply with proof" />
+          <LoadingState label="Loading application" />
         </div>
       </main>
     );
@@ -162,7 +206,7 @@ export default function FocusedApplyPage() {
         <div className="container">
           <EmptyState
             title="Opportunity not found"
-            description="Return to discovery and choose an available role before applying."
+            description="Return to opportunities and choose an active role before applying."
             action={
               <Link className="btn" href="/applicant/opportunities">
                 Back to opportunities
@@ -174,15 +218,33 @@ export default function FocusedApplyPage() {
     );
   }
 
+  if (existingApplication && isApplicationFinal(existingApplication.status)) {
+    return (
+      <main className="page">
+        <div className="container">
+          <EmptyState
+            title="This application is locked"
+            description="The employer has made a final decision, so this application can no longer be changed."
+            action={
+              <Link className="btn" href="/applicant/applications">
+                View application
+              </Link>
+            }
+          />
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="page">
+    <main className="page blueprint-page">
       <div className="container stack-lg">
         <div className="row">
           <Link
             className="btn secondary"
             href={`/applicant/opportunities/${opportunity.id}`}
           >
-            Back to role details
+            Back to opportunity details
           </Link>
 
           <Link className="btn secondary" href="/applicant/applications">
@@ -190,21 +252,21 @@ export default function FocusedApplyPage() {
           </Link>
         </div>
 
-        <BlueprintEnvironment>
+        <ProductEnvironment>
           <section className="focused-apply-layout">
             <form className="apply-form" onSubmit={submit} noValidate>
               <div className="stack">
-                <p className="eyebrow">Focused Apply</p>
-                <h1>Submit Apply with proof</h1>
+                <p className="eyebrow">Focused application</p>
+                <h1>Complete your application</h1>
                 <p className="lead">
-                  Give the employer structured answers, scenario thinking, and
-                  a proof item they can open.
+                  Answer the employer’s questions, explain how you would
+                  approach the work, and include one relevant work sample.
                 </p>
               </div>
 
               <div className="row">
-                <Badge tone="accent">Apply with proof</Badge>
-                <Badge>Focused Apply</Badge>
+                <Badge tone="accent">Focused application</Badge>
+                <Badge>Your draft saves automatically</Badge>
                 <Badge>{opportunity.type}</Badge>
                 <Badge>{opportunity.workMode}</Badge>
                 <Badge>Deadline {formatDate(opportunity.deadline)}</Badge>
@@ -222,11 +284,10 @@ export default function FocusedApplyPage() {
                   aria-labelledby="apply-error-summary-title"
                 >
                   <h3 id="apply-error-summary-title">
-                    Complete the missing required fields
+                    Complete the required fields
                   </h3>
                   <p>
-                    Each missing item is listed below and next to its field. Use
-                    the links to jump to the field that needs attention.
+                    Use the links below to open each field that needs attention.
                   </p>
                   <ul>
                     {Object.entries(errors).map(([fieldId, message]) => (
@@ -242,10 +303,10 @@ export default function FocusedApplyPage() {
                 <div className="apply-step-number">1</div>
 
                 <div className="stack">
-                  <h2>Employer questions</h2>
+                  <h2>Questions from the employer</h2>
                   <p className="muted">
-                    Required answers. Be specific enough that the employer can
-                    judge motivation, experience, and learning goals.
+                    Use specific examples so the employer can understand your
+                    motivation, relevant experience, and learning goals.
                   </p>
 
                   {opportunity.questions.map((question, index) => {
@@ -292,12 +353,12 @@ export default function FocusedApplyPage() {
 
                 <div className="stack">
                   <label htmlFor={scenarioFieldId} className="field-title">
-                    Scenario task
+                    Work scenario
                   </label>
                   <p className="muted">{opportunity.scenarioTask}</p>
                   <p id={`${scenarioFieldId}-help`} className="help-text">
-                    Required. Explain your approach in practical steps so the
-                    employer can understand how you think through work.
+                    Explain the practical steps you would take and what you
+                    would clarify before starting.
                   </p>
 
                   <textarea
@@ -328,11 +389,11 @@ export default function FocusedApplyPage() {
 
                 <div className="stack">
                   <label htmlFor={proofFieldId} className="field-title">
-                    Proof item
+                    Work sample link
                   </label>
                   <p className="muted">{opportunity.proofRequirement}</p>
                   <p id={`${proofFieldId}-help`} className="help-text">
-                    Required. Add one link the employer can open:{" "}
+                    Add one link the employer can open:{" "}
                     {proofExpectations}
                   </p>
 
@@ -362,48 +423,13 @@ export default function FocusedApplyPage() {
 
               <div className="row">
                 <button className="btn" type="submit">
-                  Submit Apply with proof
+                  {existingApplication ? "Update application" : "Send application"}
                 </button>
-
-                <Link
-                  className="btn secondary"
-                  href={`/applicant/opportunities/${opportunity.id}`}
-                >
-                  Back to role details
-                </Link>
               </div>
             </form>
 
-            <aside className="apply-side">
-              <WorkSurface className="apply-side-card">
-                <p className="eyebrow">Role</p>
-                <h2>{opportunity.title}</h2>
-                <p className="muted">
-                  {state.company.name} · {opportunity.location}
-                </p>
-                <div className="row">
-                  {opportunity.skills.map((skill) => (
-                    <Badge key={skill}>{skill}</Badge>
-                  ))}
-                </div>
-              </WorkSurface>
-
-              <WorkSurface className="apply-side-card">
-                <div className="apply-proof-box">
-                  <h3>Proof expectations</h3>
-                  <p className="muted">{proofExpectations}</p>
-                </div>
-              </WorkSurface>
-
-              <WorkSurface className="apply-side-card">
-                <p className="eyebrow">Applicant profile</p>
-                <h3>{state.applicant.fullName}</h3>
-                <p className="muted">{state.applicant.education}</p>
-                <p className="muted">{state.applicant.cvName}</p>
-              </WorkSurface>
-            </aside>
           </section>
-        </BlueprintEnvironment>
+        </ProductEnvironment>
       </div>
     </main>
   );

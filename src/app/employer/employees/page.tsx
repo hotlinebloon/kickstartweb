@@ -4,31 +4,25 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   formatDate,
+  generateWeeklyReviews,
   getProgress,
   getState,
   getTaskStatusLabel,
+  saveState,
   updateTask,
   type DemoState,
   type GrowthTask,
   type Placement,
+  type WeeklyReview,
 } from "@/lib/demo-store";
 import {
-  Badge,
-  BlueprintEnvironment,
+  ProductEnvironment,
   EmptyState,
   LoadingState,
   Progress,
-  StatCard,
   StatusBadge,
   WorkSurface,
 } from "@/components/ui";
-
-function getTaskTone(status: GrowthTask["status"]) {
-  if (status === "completed") return "success";
-  if (status === "needs_review") return "warning";
-  if (status === "working_on_it") return "info";
-  return "neutral";
-}
 
 function isOverdue(task: GrowthTask) {
   if (task.status === "completed") return false;
@@ -42,13 +36,36 @@ function getLastActivity(tasks: GrowthTask[], placement: Placement) {
   return timestamps.sort().at(-1) ?? placement.startDate;
 }
 
+function getReviewTone(health: WeeklyReview["health"]) {
+  if (health === "on_track") return "success";
+  if (health === "needs_attention") return "warning";
+  return "danger";
+}
+
+function getReviewLabel(health: WeeklyReview["health"]) {
+  if (health === "on_track") return "On track";
+  if (health === "needs_attention") return "Needs attention";
+  return "At risk";
+}
+
 export default function EmployerEmployeesPage() {
   const [state, setState] = useState<DemoState | null>(null);
   const [feedback, setFeedback] = useState<Record<string, string>>({});
   const [ratings, setRatings] = useState<Record<string, string>>({});
+  const [selectedPlacementId, setSelectedPlacementId] = useState("");
+  const [feedbackErrors, setFeedbackErrors] = useState<Record<string, string>>({});
+  const [actionNotice, setActionNotice] = useState<{ text: string; undoState: DemoState } | null>(null);
 
   useEffect(() => {
-    setState(getState());
+    const current = getState();
+    const missingReview = current.placements.some(
+      (placement) =>
+        !(current.weeklyReviews ?? []).some(
+          (review) => review.placementId === placement.id
+        )
+    );
+
+    setState(missingReview ? generateWeeklyReviews() : current);
   }, []);
 
   const interns = useMemo(() => {
@@ -65,6 +82,10 @@ export default function EmployerEmployeesPage() {
       const progress = getProgress(placement.id, state);
       const reviewTasks = tasks.filter((task) => task.status === "needs_review");
       const overdueTasks = tasks.filter(isOverdue);
+      const weeklyReview =
+        (state.weeklyReviews ?? []).find(
+          (review) => review.placementId === placement.id
+        ) ?? null;
 
       return {
         placement,
@@ -74,45 +95,81 @@ export default function EmployerEmployeesPage() {
         progress,
         reviewTasks,
         overdueTasks,
+        weeklyReview,
         lastActivity: getLastActivity(tasks, placement),
       };
-    });
+    }).sort((a, b) => Number(Boolean(b.weeklyReview?.ownerAction)) - Number(Boolean(a.weeklyReview?.ownerAction)));
   }, [state]);
 
-  const activeIntern = interns[0] ?? null;
+  const activeIntern =
+    interns.find((intern) => intern.placement.id === selectedPlacementId) ??
+    interns.find((intern) => intern.weeklyReview?.ownerAction) ??
+    interns[0] ??
+    null;
   const submittedWork = activeIntern?.reviewTasks ?? [];
-  const reviewedTasks =
-    activeIntern?.tasks.filter((task) => task.feedbackComment || task.rating) ?? [];
 
   function approveTask(taskId: string) {
-    const rating = Number(ratings[taskId] ?? "5");
+    const comment = feedback[taskId]?.trim() ?? "";
+    const rating = Number(ratings[taskId]);
+    if (!comment || !Number.isFinite(rating) || rating < 1 || rating > 5) {
+      setFeedbackErrors((current) => ({
+        ...current,
+        [taskId]: "Add written feedback and a rating from 1 to 5 before approving this task.",
+      }));
+      return;
+    }
+    const undoState = state;
+    if (!undoState) return;
     const next = updateTask({
       taskId,
       status: "completed",
-      feedbackComment: feedback[taskId]?.trim() || "Approved. Good work.",
-      rating: Number.isFinite(rating) ? rating : 5,
+      feedbackComment: comment,
+      rating,
     });
 
     setState(next);
+    setActionNotice({ text: "Task approved. It now counts toward the intern’s development record.", undoState });
+    setFeedbackErrors((current) => ({ ...current, [taskId]: "" }));
   }
 
   function requestRevision(taskId: string) {
+    const comment = feedback[taskId]?.trim() ?? "";
+    if (!comment) {
+      setFeedbackErrors((current) => ({
+        ...current,
+        [taskId]: "Explain what the intern needs to revise before returning this task.",
+      }));
+      return;
+    }
+    const undoState = state;
+    if (!undoState) return;
     const next = updateTask({
       taskId,
       status: "working_on_it",
-      feedbackComment:
-        feedback[taskId]?.trim() ||
-        "Needs revision. Please improve and submit again.",
+      feedbackComment: comment,
     });
 
     setState(next);
+    setActionNotice({ text: "Task returned for revision. The intern can update and resubmit it.", undoState });
+    setFeedbackErrors((current) => ({ ...current, [taskId]: "" }));
+  }
+
+  function generateReviews() {
+    setState(generateWeeklyReviews());
+  }
+
+  function undoTaskAction() {
+    if (!actionNotice) return;
+    saveState(actionNotice.undoState);
+    setState(actionNotice.undoState);
+    setActionNotice(null);
   }
 
   if (!state) {
     return (
       <main className="page">
         <div className="container">
-          <LoadingState label="Loading intern monitoring" />
+          <LoadingState label="Loading active interns" />
         </div>
       </main>
     );
@@ -124,22 +181,19 @@ export default function EmployerEmployeesPage() {
         <div className="container stack-lg">
           <section className="page-header between">
             <div className="stack">
-              <p className="eyebrow">Employer workspace</p>
-              <h1>Intern monitoring</h1>
+              <p className="eyebrow">Intern development</p>
+              <h1>No active interns yet</h1>
               <p className="lead">
-                Accepted interns, submitted work, feedback, and progress will
-                appear here after an applicant is accepted.
+                Accepted interns, submitted work, feedback, and development
+                signals will appear here after an applicant is accepted.
               </p>
             </div>
 
-            <Link className="btn secondary" href="/employer/applicants">
-              Review applicants
-            </Link>
           </section>
 
           <EmptyState
             title="No accepted interns yet"
-            description="Accept an applicant from the employer review queue before monitoring intern work."
+            description="Accept an applicant to create a placement and begin reviewing their work."
             action={
               <Link className="btn" href="/employer/applicants">
                 Review applicants
@@ -156,11 +210,11 @@ export default function EmployerEmployeesPage() {
       <div className="container stack-lg">
         <section className="page-header between">
           <div className="stack">
-            <p className="eyebrow">Employer workspace</p>
-            <h1>Intern monitoring</h1>
+            <p className="eyebrow">Intern development</p>
+            <h1>Intern attention queue</h1>
             <p className="lead">
-              Monitor active interns, see what needs review, and respond to
-              submitted work with feedback.
+              Review submitted work first, then check interns who need support
+              or a clearer next step.
             </p>
           </div>
 
@@ -177,53 +231,205 @@ export default function EmployerEmployeesPage() {
           </div>
         </section>
 
-        <BlueprintEnvironment>
+        {actionNotice ? (
+          <div className="notice notice-actions" role="status">
+            <span>{actionNotice.text}</span>
+            <button className="btn secondary" type="button" onClick={undoTaskAction}>
+              Undo last action
+            </button>
+          </div>
+        ) : null}
+
+        <section className="attention-summary" aria-label="Intern attention summary">
+          <div>
+            <strong>{submittedWork.length}</strong>
+            <span>Tasks waiting for review</span>
+          </div>
+          <div>
+            <strong>{interns.filter((intern) => intern.overdueTasks.length > 0).length}</strong>
+            <span>Interns with overdue work</span>
+          </div>
+          <div>
+            <strong>{interns.filter((intern) => intern.weeklyReview?.ownerAction).length}</strong>
+            <span>Mentor actions suggested</span>
+          </div>
+        </section>
+
+        <details className="weekly-review-disclosure">
+          <summary>View weekly development summaries</summary>
+        <section className="weekly-review-section stack">
+          <div className="between">
+            <div>
+              <p className="meta-label">Mentorship summary</p>
+              <h2>Weekly development summaries</h2>
+              <p className="muted">
+                Kickstart turns task activity, deadlines, submissions, ratings,
+                and feedback into one review per intern.
+              </p>
+            </div>
+
+            <StatusBadge
+              tone={
+                interns.some((intern) => intern.weeklyReview?.ownerAction)
+                  ? "warning"
+                  : "success"
+              }
+            >
+              {interns.filter((intern) => intern.weeklyReview?.ownerAction).length}{" "}
+              mentor actions
+            </StatusBadge>
+          </div>
+
+          {interns.some((intern) => intern.weeklyReview) ? (
+            <div className="weekly-review-grid">
+              {interns.map((intern) => {
+                const review = intern.weeklyReview;
+                if (!review) return null;
+
+                return (
+                  <article key={review.id} className="weekly-review-card">
+                    <div className="between">
+                      <div>
+                        <p className="meta-label">
+                          {intern.application?.applicantSnapshot.fullName ??
+                            "Accepted intern"}{" "}
+                          · {intern.placement.roleTitle}
+                        </p>
+                        <h3>{review.headline}</h3>
+                      </div>
+
+                      <StatusBadge tone={getReviewTone(review.health)}>
+                        {getReviewLabel(review.health)}
+                      </StatusBadge>
+                    </div>
+
+                    <p className="muted">{review.summary}</p>
+
+                    <div className="weekly-review-columns">
+                      <div className="stack-sm">
+                        <strong>What went well</strong>
+                        {review.wins.map((item) => (
+                          <p key={item} className="muted">
+                            {item}
+                          </p>
+                        ))}
+                      </div>
+
+                      <div className="stack-sm">
+                        <strong>Needs work</strong>
+                        {review.needsWork.map((item) => (
+                          <p key={item} className="muted">
+                            {item}
+                          </p>
+                        ))}
+                      </div>
+
+                      <div className="stack-sm">
+                        <strong>Next focus</strong>
+                        {review.nextFocus.map((item) => (
+                          <p key={item} className="muted">
+                            {item}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div
+                      className={`owner-action ${
+                        review.ownerAction ? "needs-action" : ""
+                      }`}
+                    >
+                      <strong>
+                        {review.ownerAction
+                          ? "Mentor action needed"
+                          : "No mentor action needed"}
+                      </strong>
+                      <span>
+                        {review.ownerAction ??
+                          "No mentor action is suggested before the next review."}
+                      </span>
+                    </div>
+
+                    <p className="help-text">
+                      Generated {formatDate(review.generatedAt)} from{" "}
+                      {review.evidence.tasksUpdated} task updates,{" "}
+                      {review.evidence.tasksCompleted} completions, and{" "}
+                      {review.evidence.tasksWaitingReview} submissions waiting for
+                      review.
+                    </p>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="state-surface">
+              <h3>No development summary generated yet</h3>
+              <p className="muted">
+                Generate summaries to get a concise review of every active
+                intern and only the actions that need owner attention.
+              </p>
+              <div className="row">
+                <button className="btn" type="button" onClick={generateReviews}>
+                  Generate development summaries
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+        </details>
+
+        <ProductEnvironment>
           <section className="employer-monitor-layout">
             <div className="stack-lg">
               <WorkSurface className="monitor-table-surface">
                 <div className="between">
                   <div>
-                    <p className="eyebrow">Accepted interns</p>
+                    <p className="meta-label">Accepted interns</p>
                     <h2>Active intern list</h2>
                   </div>
 
                   <StatusBadge tone="info">{interns.length} active</StatusBadge>
                 </div>
 
-                <div className="intern-table" role="table" aria-label="Accepted interns">
-                  <div className="intern-table-row intern-table-head" role="row">
-                    <span role="columnheader">Intern</span>
-                    <span role="columnheader">Role</span>
-                    <span role="columnheader">Status</span>
-                    <span role="columnheader">Progress</span>
-                    <span role="columnheader">Needs review</span>
-                    <span role="columnheader">Overdue</span>
-                    <span role="columnheader">Last activity</span>
+                <div className="intern-table" aria-label="Accepted interns">
+                  <div className="intern-table-row intern-table-head" aria-hidden="true">
+                    <span>Intern</span>
+                    <span>Role</span>
+                    <span>Status</span>
+                    <span>Progress</span>
+                    <span>Needs review</span>
+                    <span>Overdue</span>
+                    <span>Last activity</span>
                   </div>
 
                   {interns.map((intern) => (
-                    <div
+                    <button
                       key={intern.placement.id}
-                      className="intern-table-row"
-                      role="row"
+                      className={`intern-table-row intern-select-row ${
+                        activeIntern?.placement.id === intern.placement.id ? "active" : ""
+                      }`}
+                      type="button"
+                      aria-pressed={activeIntern?.placement.id === intern.placement.id}
+                      aria-label={`Open ${intern.application?.applicantSnapshot.fullName ?? "accepted intern"}, ${intern.placement.roleTitle}, ${intern.progress.completionRate}% complete`}
+                      onClick={() => setSelectedPlacementId(intern.placement.id)}
                     >
-                      <strong role="cell">
+                      <strong>
                         {intern.application?.applicantSnapshot.fullName ??
                           "Accepted intern"}
                       </strong>
-                      <span role="cell">
+                      <span>
                         {intern.opportunity?.title ?? intern.placement.roleTitle}
                       </span>
-                      <span role="cell">
+                      <span>
                         <StatusBadge tone="success">Active</StatusBadge>
                       </span>
-                      <span role="cell">
+                      <span>
                         {intern.progress.completionRate}% complete
                       </span>
-                      <span role="cell">{intern.reviewTasks.length}</span>
-                      <span role="cell">{intern.overdueTasks.length}</span>
-                      <span role="cell">{formatDate(intern.lastActivity)}</span>
-                    </div>
+                      <span>{intern.reviewTasks.length}</span>
+                      <span>{intern.overdueTasks.length}</span>
+                      <span>{formatDate(intern.lastActivity)}</span>
+                    </button>
                   ))}
                 </div>
               </WorkSurface>
@@ -233,7 +439,7 @@ export default function EmployerEmployeesPage() {
                   <WorkSurface className="monitor-profile-surface">
                     <div className="between">
                       <div className="stack-sm">
-                        <p className="eyebrow">Intern detail</p>
+                        <p className="meta-label">Intern detail</p>
                         <h2>
                           {activeIntern.application?.applicantSnapshot.fullName ??
                             "Accepted intern"}
@@ -249,35 +455,19 @@ export default function EmployerEmployeesPage() {
 
                     <Progress value={activeIntern.progress.completionRate} />
 
-                    <div className="grid grid-4">
-                      <StatCard
-                        title="Haven't started"
-                        description="Assigned tasks"
-                        value={activeIntern.progress.notStarted}
-                      />
-                      <StatCard
-                        title="Working"
-                        description="In progress"
-                        value={activeIntern.progress.working}
-                      />
-                      <StatCard
-                        title="Needs review"
-                        description="Employer action"
-                        value={activeIntern.progress.review}
-                      />
-                      <StatCard
-                        title="Completed"
-                        description="Approved work"
-                        value={activeIntern.progress.completed}
-                      />
+                    <div className="metric-strip">
+                      <span><strong>{activeIntern.progress.notStarted}</strong> Not started</span>
+                      <span><strong>{activeIntern.progress.working}</strong> Working</span>
+                      <span><strong>{activeIntern.progress.review}</strong> Needs review</span>
+                      <span><strong>{activeIntern.progress.completed}</strong> Completed</span>
                     </div>
                   </WorkSurface>
 
                   <WorkSurface id="submitted-work" className="monitor-review-surface">
                     <div className="between">
                       <div>
-                        <p className="eyebrow">Submitted work</p>
-                        <h2>Tasks needing employer review</h2>
+                        <p className="meta-label">Submitted work</p>
+                        <h2>Submitted tasks to review</h2>
                       </div>
 
                       <StatusBadge
@@ -291,8 +481,7 @@ export default function EmployerEmployeesPage() {
                       <div className="state-surface">
                         <h3>No tasks needing review</h3>
                         <p className="muted">
-                          This intern has no submitted work waiting for employer
-                          review right now.
+                          This intern has no submitted tasks waiting for review.
                         </p>
                       </div>
                     ) : (
@@ -318,48 +507,64 @@ export default function EmployerEmployeesPage() {
                             ) : null}
 
                             {task.submissionLink ? (
-                              <p className="muted proof-link">
-                                <strong>Submission:</strong>{" "}
-                                {task.submissionLink}
-                              </p>
+                              <a className="text-link" href={task.submissionLink} target="_blank" rel="noreferrer">
+                                Open submitted work
+                              </a>
                             ) : null}
 
                             <div className="feedback-grid">
                               <label>
                                 Feedback comment
                                 <textarea
+                                  id={`feedback-${task.id}`}
                                   className="textarea"
-                                  value={
-                                    feedback[task.id] ??
-                                    "Good structure. Improve mobile spacing next time."
+                                  aria-invalid={Boolean(feedbackErrors[task.id])}
+                                  aria-describedby={
+                                    feedbackErrors[task.id] ? `feedback-error-${task.id}` : undefined
                                   }
-                                  onChange={(event) =>
+                                  value={
+                                    feedback[task.id] ?? ""
+                                  }
+                                  onChange={(event) => {
                                     setFeedback((prev) => ({
                                       ...prev,
                                       [task.id]: event.target.value,
-                                    }))
-                                  }
+                                    }));
+                                    setFeedbackErrors((current) => ({ ...current, [task.id]: "" }));
+                                  }}
                                 />
                               </label>
 
                               <label>
                                 Rating
                                 <input
+                                  id={`rating-${task.id}`}
                                   className="input"
                                   type="number"
                                   min="1"
                                   max="5"
                                   step="0.5"
-                                  value={ratings[task.id] ?? "4.5"}
-                                  onChange={(event) =>
+                                  aria-invalid={Boolean(feedbackErrors[task.id])}
+                                  aria-describedby={
+                                    feedbackErrors[task.id] ? `feedback-error-${task.id}` : undefined
+                                  }
+                                  value={ratings[task.id] ?? ""}
+                                  onChange={(event) => {
                                     setRatings((prev) => ({
                                       ...prev,
                                       [task.id]: event.target.value,
-                                    }))
-                                  }
+                                    }));
+                                    setFeedbackErrors((current) => ({ ...current, [task.id]: "" }));
+                                  }}
                                 />
                               </label>
                             </div>
+
+                            {feedbackErrors[task.id] ? (
+                              <p id={`feedback-error-${task.id}`} className="field-error">
+                                {feedbackErrors[task.id]}
+                              </p>
+                            ) : null}
 
                             <div className="row">
                               <button
@@ -374,7 +579,7 @@ export default function EmployerEmployeesPage() {
                                 type="button"
                                 onClick={() => requestRevision(task.id)}
                               >
-                                Needs revision
+                                Request revision
                               </button>
                             </div>
                           </article>
@@ -386,65 +591,8 @@ export default function EmployerEmployeesPage() {
               ) : null}
             </div>
 
-            <aside className="monitor-side">
-              <WorkSurface>
-                <p className="eyebrow">Attention next</p>
-                <h3>
-                  {submittedWork.length > 0
-                    ? `${submittedWork.length} task${
-                        submittedWork.length === 1 ? "" : "s"
-                      } waiting for review`
-                    : "No review queue right now"}
-                </h3>
-                <p className="muted">
-                  Approve submitted work when it meets expectations, or request
-                  revision with a clear feedback comment.
-                </p>
-              </WorkSurface>
-
-              <WorkSurface>
-                <p className="eyebrow">All placement tasks</p>
-                <div className="stack-sm">
-                  {activeIntern?.tasks.map((task) => (
-                    <div key={task.id} className="monitor-task-row">
-                      <div>
-                        <strong>{task.title}</strong>
-                        <p className="muted">Due {formatDate(task.dueDate)}</p>
-                      </div>
-
-                      <StatusBadge tone={getTaskTone(task.status)}>
-                        {getTaskStatusLabel(task.status)}
-                      </StatusBadge>
-                    </div>
-                  ))}
-                </div>
-              </WorkSurface>
-
-              <WorkSurface>
-                <p className="eyebrow">Feedback history</p>
-                {reviewedTasks.length === 0 ? (
-                  <p className="muted">No feedback has been sent yet.</p>
-                ) : (
-                  <div className="stack-sm">
-                    {reviewedTasks.map((task) => (
-                      <div key={task.id} className="monitor-task-row">
-                        <div>
-                          <strong>{task.title}</strong>
-                          <p className="muted">
-                            {task.feedbackComment ?? "No written feedback."}
-                          </p>
-                        </div>
-                        {task.rating ? (
-                          <Badge tone="success">{task.rating}/5</Badge>
-                        ) : null}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </WorkSurface>
-            </aside>
           </section>
-        </BlueprintEnvironment>
+        </ProductEnvironment>
       </div>
     </main>
   );

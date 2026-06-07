@@ -1,0 +1,4 @@
+/*
+ * Product workflow styling now lives in globals.css as one consolidated
+ * platform system. This import remains to preserve the existing layout API.
+ */

@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { AppNav } from "@/components/app-nav";
 import "./globals.css";
+import "./product-system.css";
 
 export const metadata: Metadata = {
-  title: "Kickstart 11-Step Prototype",
-  description: "Focused Kickstart demo: application to growth dashboard.",
+  title: {
+    default: "Kickstart | Find and develop future talent",
+    template: "%s | Kickstart",
+  },
+  description:
+    "Kickstart helps employers find promising interns, review real evidence, and develop future talent.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

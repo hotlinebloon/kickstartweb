@@ -1,214 +1,229 @@
 import Link from "next/link";
-import { KickstartLogo } from "@/components/kickstart-logo";
+import { Progress } from "@/components/ui";
 
-const steps = [
+const stages = [
   {
-    title: "Find an opportunity",
-    text: "Applicants browse youth opportunities and open a role that fits their skills.",
+    number: "01",
+    label: "Application",
+    title: "Potential enters the system.",
+    text: "Applicants choose an open role and submit role-specific thinking, motivation, and relevant proof.",
+    detail: "Focused application received",
   },
   {
-    title: "Apply with proof",
-    text: "Focused Apply uses questions, a scenario task, and a proof item instead of only a CV.",
+    number: "02",
+    label: "Evidence",
+    title: "Employers see more than a CV.",
+    text: "Structured answers and work samples make early potential easier to compare and discuss.",
+    detail: "Evidence ready for review",
   },
   {
-    title: "Get reviewed properly",
-    text: "Employers review structured applications and accept applicants into placements.",
+    number: "03",
+    label: "Decision",
+    title: "A hiring decision creates a plan.",
+    text: "The employer records why the applicant stood out. Acceptance creates a placement and starter tasks.",
+    detail: "Placement created",
   },
   {
-    title: "Grow after hiring",
-    text: "Accepted interns get tasks, submit work, receive feedback, and build a progress profile.",
+    number: "04",
+    label: "Development",
+    title: "Real work proves the decision.",
+    text: "Tasks, submitted work, feedback, and revisions show whether potential is becoming performance.",
+    detail: "Development record active",
   },
 ];
 
 export default function HomePage() {
   return (
-    <main className="page">
-      <section className="container hero">
-        <div className="hero-copy stack-lg">
-          <div className="stack">
-            <p className="eyebrow">Youth opportunity + growth platform</p>
-
-            <h1 className="hero-title">
-              Find young talent. Help them <span>grow.</span>
-            </h1>
-
-            <p className="lead">
-              Kickstart helps young people find opportunities, prove their
-              skills through Focused Apply, get reviewed properly, and continue
-              growing after they are accepted.
-            </p>
+    <main className="page home-page home-overdrive">
+      <section className="container home-machine-hero">
+        <div className="home-machine-copy">
+          <p className="home-machine-label">Kickstart talent system</p>
+          <h1>
+            <span>Potential</span>
+            <span className="home-machine-arrow" aria-hidden="true">→</span>
+            <span>Proven.</span>
+          </h1>
+          <p className="lead">
+            Applicants prove what they can do. Employers hire with evidence.
+            Kickstart keeps that shared record alive through real work,
+            feedback, and development.
+          </p>
+          <div className="home-audience-pair" aria-label="Kickstart for applicants and employers">
+            <div>
+              <span>For applicants</span>
+              <strong>Turn potential into visible proof.</strong>
+            </div>
+            <div>
+              <span>For employers</span>
+              <strong>Find future hires through evidence.</strong>
+            </div>
           </div>
-
-          <div className="nav-actions">
+          <div className="home-machine-actions">
             <Link href="/login" className="btn">
-              Start demo
+              Start reviewing talent
             </Link>
-
             <Link href="/applicant/opportunities" className="btn secondary">
-              Explore opportunities
+              Browse opportunities
             </Link>
-          </div>
-
-          <div className="grid grid-3">
-            <div className="card soft">
-              <p className="eyebrow">01</p>
-              <h3>Discover</h3>
-              <p className="muted">
-                Browse internships, micro-projects, and entry-level roles.
-              </p>
-            </div>
-
-            <div className="card soft">
-              <p className="eyebrow">02</p>
-              <h3>Apply with proof</h3>
-              <p className="muted">
-                Answer questions, complete a short scenario, and attach proof.
-              </p>
-            </div>
-
-            <div className="card soft">
-              <p className="eyebrow">03</p>
-              <h3>Grow after hiring</h3>
-              <p className="muted">
-                Move tasks through a Growth Dashboard and receive feedback.
-              </p>
-            </div>
           </div>
         </div>
 
-        <div className="hero-visual">
-          <div className="node-path">
-            <svg viewBox="0 0 600 560">
-              <path d="M90 80 C220 110 210 250 330 240 C460 230 430 410 535 450" />
-              <circle cx="90" cy="80" r="10" />
-              <circle cx="330" cy="240" r="10" />
-              <circle cx="535" cy="450" r="10" />
-            </svg>
-          </div>
-
-          <div className="mock-stack">
-            <div className="card blueprint mock-card one stack">
-              <div className="between">
-                <div>
-                  <p className="eyebrow">Opportunity</p>
-                  <h3>Frontend Intern</h3>
-                </div>
-                <span className="badge accent">Focused Apply</span>
-              </div>
-
-              <p className="muted">
-                NovaTech · Prishtina / Hybrid · React, UI, CSS
-              </p>
-
-              <div className="nav-actions">
-                <span className="badge">Internship</span>
-                <span className="badge blue">Deadline soon</span>
-              </div>
-            </div>
-
-            <div className="card mock-card two stack">
-              <p className="eyebrow">Focused Apply</p>
-              <h3>Show more than a CV</h3>
-
-              <div className="stack-sm">
-                <div className="card soft">
-                  Why are you interested in this role?
-                </div>
-                <div className="card soft">
-                  Scenario: improve our landing page.
-                </div>
-                <div className="card soft">Proof: GitHub or portfolio link</div>
-              </div>
-            </div>
-
-            <div className="card mock-card three stack">
-              <p className="eyebrow">Employer review</p>
-              <h3>Arta Krasniqi</h3>
-              <p className="muted">
-                Strong project, clear motivation, good proof item.
-              </p>
-
-              <div className="nav-actions">
-                <span className="badge blue">Shortlist</span>
-                <span className="badge accent">Accept</span>
-              </div>
-            </div>
-
-            <div className="card blueprint mock-card four stack">
-              <div className="between">
-                <div>
-                  <p className="eyebrow">Growth Dashboard</p>
-                  <h3>Task progress</h3>
-                </div>
-                <KickstartLogo />
-              </div>
-
-              <div className="task-columns" style={{ gridTemplateColumns: "1fr 1fr" }}>
-                <div className="task-column">
-                  <p className="badge">Working</p>
-                  <div className="task-card" style={{ marginTop: 10 }}>
-                    Build landing page hero
-                  </div>
-                </div>
-                <div className="task-column">
-                  <p className="badge accent">Needs Review</p>
-                  <div className="task-card" style={{ marginTop: 10 }}>
-                    Submit GitHub link
-                  </div>
-                </div>
-              </div>
+        <div className="home-candidate-ticket" aria-label="Candidate entering the Kickstart lifecycle">
+          <div className="home-ticket-code">KS / CANDIDATE / 0042</div>
+          <div className="home-ticket-person">
+            <span className="home-ticket-avatar">AK</span>
+            <div>
+              <strong>Arta Krasniqi</strong>
+              <span>Frontend intern candidate</span>
             </div>
           </div>
+          <div className="home-ticket-proof">
+            <span>Evidence attached</span>
+            <strong>3 role answers · 1 scenario · 1 work sample</strong>
+          </div>
+          <span className="home-ticket-status">Ready for review</span>
+        </div>
+
+        <div className="home-machine-rail" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
         </div>
       </section>
 
-      <section className="container stack-lg" style={{ marginTop: 70 }}>
-        <div className="between">
-          <div className="stack">
-            <p className="eyebrow">The core demo path</p>
-            <h2>From first application to first real progress.</h2>
-          </div>
+      <section className="container home-assembly" aria-labelledby="assembly-title">
+        <header className="home-assembly-intro">
+          <p className="home-machine-label">One record. Four working stages.</p>
+          <h2 id="assembly-title">Hiring and development belong in the same system.</h2>
+          <p>
+            Kickstart carries the reason someone was hired into the work that
+            proves whether the decision was right.
+          </p>
+        </header>
 
-          <Link href="/login" className="btn">
-            Try the prototype
-          </Link>
-        </div>
-
-        <div className="grid grid-4">
-          {steps.map((step, index) => (
-            <div key={step.title} className="card">
-              <div className="stack">
-                <div className="step-number">{index + 1}</div>
-                <h3>{step.title}</h3>
-                <p className="muted">{step.text}</p>
+        <div className="home-assembly-line">
+          {stages.map((stage, index) => (
+            <article key={stage.number} className="home-stage">
+              <div className="home-stage-marker">
+                <span>{stage.number}</span>
+                <i aria-hidden="true" />
               </div>
-            </div>
+
+              <div className="home-stage-copy">
+                <p>{stage.label}</p>
+                <h3>{stage.title}</h3>
+                <span>{stage.text}</span>
+              </div>
+
+              <div className={`home-stage-interface stage-${index + 1}`}>
+                {index === 0 ? (
+                  <>
+                    <div className="home-interface-head">
+                      <span>Focused application</span>
+                      <strong>Frontend Intern</strong>
+                    </div>
+                    <div className="home-interface-question">
+                      <span>Scenario response</span>
+                      <p>Clarify the first action, explain the expected result, and test it with new users.</p>
+                    </div>
+                    <div className="home-interface-proof">Work sample attached</div>
+                  </>
+                ) : null}
+
+                {index === 1 ? (
+                  <>
+                    <div className="home-interface-head">
+                      <span>Applicant review</span>
+                      <strong>Evidence summary</strong>
+                    </div>
+                    <div className="home-evidence-bars">
+                      <span style={{ "--bar": "88%" } as React.CSSProperties}>Relevant proof</span>
+                      <span style={{ "--bar": "76%" } as React.CSSProperties}>Clear reasoning</span>
+                      <span style={{ "--bar": "82%" } as React.CSSProperties}>Learning potential</span>
+                    </div>
+                  </>
+                ) : null}
+
+                {index === 2 ? (
+                  <>
+                    <div className="home-interface-head">
+                      <span>Decision note</span>
+                      <strong>Accept applicant</strong>
+                    </div>
+                    <blockquote>
+                      Strong relevant work, clear reasoning, and a specific learning goal.
+                    </blockquote>
+                    <div className="home-decision-actions">
+                      <span>Shortlist</span>
+                      <strong>Accept + create placement</strong>
+                    </div>
+                  </>
+                ) : null}
+
+                {index === 3 ? (
+                  <>
+                    <div className="home-interface-head">
+                      <span>Active placement</span>
+                      <strong>Development record</strong>
+                    </div>
+                    <div className="home-development-progress">
+                      <div>
+                        <strong>3 of 4 tasks complete</strong>
+                        <span>75%</span>
+                      </div>
+                      <Progress value={75} />
+                    </div>
+                    <div className="home-development-task">
+                      <span>Submitted work reviewed</span>
+                      <strong>Approved with feedback</strong>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+
+              <div className="home-stage-output">
+                <span aria-hidden="true">✓</span>
+                <strong>{stage.detail}</strong>
+              </div>
+            </article>
           ))}
         </div>
       </section>
 
-      <section className="container stack-lg" style={{ marginTop: 70 }}>
-        <div className="card blueprint">
-          <div className="between">
-            <div className="stack">
-              <p className="eyebrow">Product promise</p>
-              <h2>Not just hiring. Growth after hiring.</h2>
-              <p className="lead">
-                Kickstart does not stop when a company accepts an applicant.
-                New interns get tasks, feedback, and a visible progress profile
-                that can become proof for future opportunities.
-              </p>
-            </div>
-
-            <div className="nav-actions">
-              <Link href="/applicant/opportunities" className="btn">
-                Applicant flow
-              </Link>
-              <Link href="/employer/applicants" className="btn secondary">
-                Employer flow
-              </Link>
-            </div>
+      <section className="container home-final-output">
+        <div>
+          <p className="home-machine-label">The output</p>
+          <h2>A future hire backed by evidence, work, and feedback.</h2>
+        </div>
+        <div className="home-output-record">
+          <div>
+            <span>Candidate</span>
+            <strong>Arta Krasniqi</strong>
           </div>
+          <div>
+            <span>Placement</span>
+            <strong>Frontend Intern</strong>
+          </div>
+          <div>
+            <span>Work completed</span>
+            <strong>3 approved tasks · 1 revision</strong>
+          </div>
+          <div>
+            <span>Employer evidence</span>
+            <strong>4.7 / 5 average review</strong>
+          </div>
+          <div>
+            <span>Demonstrated strength</span>
+            <strong>Clear reasoning under feedback</strong>
+          </div>
+          <div className="home-output-verdict">
+            <span>Future-hire recommendation</span>
+            <strong>Ready for another project</strong>
+          </div>
+          <Link href="/login" className="btn">
+            Open Kickstart
+          </Link>
         </div>
       </section>
     </main>

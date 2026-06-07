@@ -8,22 +8,12 @@ import { getState } from "@/lib/demo-store";
 import { KickstartLogo } from "@/components/kickstart-logo";
 
 function isActive(pathname: string, href: string) {
-  return pathname === href;
+  if (href === "/") return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function roleLabel(user: DemoUser | null) {
-  if (!user) return "Not logged in";
-  return user.role === "applicant"
-    ? `Applicant · ${user.name}`
-    : `Employer · ${user.name}`;
-}
-
-function roleContext(user: DemoUser | null, hasPlacement: boolean) {
-  if (!user) return "Public access";
-  if (user.role === "applicant") {
-    return hasPlacement ? "Applicant account · Intern workspace unlocked" : "Applicant account";
-  }
-  return "Employer account";
+function roleLabel(user: DemoUser) {
+  return user.role === "applicant" ? "Applicant account" : "Employer account";
 }
 
 export function AppNav() {
@@ -50,9 +40,9 @@ export function AppNav() {
   const links = useMemo(() => {
     if (!user) {
       return [
-        { href: "/", label: "Home" },
-        { href: "/login", label: "Login" },
-        { href: "/register", label: "Signup" },
+        { href: "/#lifecycle", label: "Hiring process" },
+        { href: "/#development", label: "Intern development" },
+        { href: "/applicant/opportunities", label: "Opportunities" },
       ];
     }
 
@@ -64,8 +54,8 @@ export function AppNav() {
 
       if (hasPlacement) {
         applicantLinks.push(
-          { href: "/employee/tasks", label: "Intern tasks" },
-          { href: "/employee/progress", label: "Intern progress" }
+          { href: "/employee/tasks", label: "Placement tasks" },
+          { href: "/employee/progress", label: "Development record" }
         );
       }
 
@@ -73,8 +63,9 @@ export function AppNav() {
     }
 
     return [
-      { href: "/employer/applicants", label: "Review applicants" },
-      { href: "/employer/employees", label: "Monitor interns" },
+      { href: "/employer/opportunities", label: "Opportunities" },
+      { href: "/employer/applicants", label: "Applicants" },
+      { href: "/employer/employees", label: "Active interns" },
     ];
   }, [user, hasPlacement]);
 
@@ -87,56 +78,53 @@ export function AppNav() {
   return (
     <header className="nav">
       <div className="nav-inner">
-        <div className="nav-top">
+        <div className="nav-main">
           <Link href="/" className="logo">
             <KickstartLogo />
-            <span>Kickstart</span>
+            <span className="sr-only">Kickstart home</span>
           </Link>
 
-          <div className="nav-actions">
-            <span className="role-chip">
-              <span className="role-chip-context">{roleContext(user, hasPlacement)}</span>
-              <span>{roleLabel(user)}</span>
-            </span>
+          <nav className="nav-links" aria-label="Primary">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`nav-link ${isActive(pathname, link.href) ? "active" : ""}`}
+                aria-current={isActive(pathname, link.href) ? "page" : undefined}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
 
+          <div className="nav-actions">
             {user ? (
-              <button className="btn secondary" onClick={handleLogout}>
-                Logout
-              </button>
+              <>
+                <span className="role-chip">
+                  <strong>{user.name}</strong>
+                  <span>{roleLabel(user)}</span>
+                </span>
+                <button className="nav-account-action" type="button" onClick={handleLogout}>
+                  Log out
+                </button>
+              </>
             ) : (
               <>
-                <Link href="/login" className="btn secondary">
-                  Login
+                <Link href="/login" className="nav-account-action">
+                  Log in
                 </Link>
 
-                <Link href="/register" className="btn">
-                  Signup
+                <Link href="/register" className="nav-primary-action">
+                  Create employer account
                 </Link>
               </>
             )}
           </div>
         </div>
 
-        <nav className="nav-links" aria-label="Primary">
-          <span className="nav-label">
-            {user?.role === "employer" ? "Employer workspace" : "Applicant workspace"}
-          </span>
-
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`nav-link ${isActive(pathname, link.href) ? "active" : ""}`}
-              aria-current={isActive(pathname, link.href) ? "page" : undefined}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
         {user?.role === "applicant" && !hasPlacement ? (
-          <p className="muted" style={{ fontSize: 13 }}>
-            Intern workspace unlocks after an employer accepts your application.
+          <p className="nav-hint">
+            Tasks and feedback appear here after your first placement.
           </p>
         ) : null}
       </div>

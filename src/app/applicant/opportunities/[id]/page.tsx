@@ -3,10 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { formatDate, getState, type DemoState } from "@/lib/demo-store";
+import {
+  formatDate,
+  getApplicationStatusLabel,
+  getState,
+  isApplicationFinal,
+  type DemoState,
+} from "@/lib/demo-store";
 import {
   Badge,
-  BlueprintEnvironment,
+  ProductEnvironment,
   EmptyState,
   LoadingState,
   StatusBadge,
@@ -32,10 +38,19 @@ export default function OpportunityDetailPage() {
 
     return (
       state.applications.find(
-        (application) => application.opportunityId === opportunity.id
+        (application) =>
+          application.opportunityId === opportunity.id &&
+          application.applicantId === state.applicant.id
       ) ?? null
     );
   }, [state, opportunity]);
+
+  const existingApplicationTone =
+    existingApplication?.status === "accepted"
+      ? "success"
+      : existingApplication?.status === "rejected"
+        ? "danger"
+        : "info";
 
   if (!state) {
     return (
@@ -53,7 +68,7 @@ export default function OpportunityDetailPage() {
         <div className="container">
           <EmptyState
             title="Opportunity not found"
-            description="Return to discovery and choose an available role."
+            description="Return to opportunities and choose an active role."
             action={
               <Link className="btn" href="/applicant/opportunities">
                 Back to opportunities
@@ -70,7 +85,7 @@ export default function OpportunityDetailPage() {
       <div className="container stack-lg">
         <div className="row">
           <Link className="btn secondary" href="/applicant/opportunities">
-            ← Back to opportunities
+            Back to opportunities
           </Link>
 
           <Link className="btn secondary" href="/applicant/applications">
@@ -78,7 +93,7 @@ export default function OpportunityDetailPage() {
           </Link>
         </div>
 
-        <BlueprintEnvironment>
+        <ProductEnvironment>
           <section className="apply-detail-layout">
             <div className="stack-lg">
               <WorkSurface className="apply-hero">
@@ -97,14 +112,15 @@ export default function OpportunityDetailPage() {
               </div>
 
               <div className="apply-meta">
-                <Badge tone="accent">Apply with proof</Badge>
-                <Badge>Focused Apply</Badge>
+                <Badge tone="accent">Focused application</Badge>
                 <Badge>{opportunity.type}</Badge>
                 <Badge>{opportunity.workMode}</Badge>
                 <Badge>{opportunity.location}</Badge>
                 <Badge>Deadline {formatDate(opportunity.deadline)}</Badge>
                 {existingApplication ? (
-                  <StatusBadge tone="success">Already applied</StatusBadge>
+                  <StatusBadge tone={existingApplicationTone}>
+                    {getApplicationStatusLabel(existingApplication.status)}
+                  </StatusBadge>
                 ) : null}
               </div>
 
@@ -121,7 +137,7 @@ export default function OpportunityDetailPage() {
 
             <section className="grid grid-2">
               <div className="apply-section">
-                <h3>What you will do</h3>
+                <h3>Responsibilities</h3>
 
                 <div className="apply-list">
                   {opportunity.responsibilities.map((item) => (
@@ -133,7 +149,7 @@ export default function OpportunityDetailPage() {
               </div>
 
               <div className="apply-section">
-                <h3>What they expect</h3>
+                <h3>Requirements</h3>
 
                 <div className="apply-list">
                   {opportunity.requirements.map((item) => (
@@ -147,25 +163,31 @@ export default function OpportunityDetailPage() {
 
             <WorkSurface className="apply-mode-summary">
               <div className="stack">
-                <h2>Apply with proof</h2>
+                <h2>Submit a focused application</h2>
                 <p className="muted">
-                  Focused Apply gives the employer structured answers, a short
-                  scenario response, and a proof item they can review.
+                  Answer the employer’s questions, explain your approach to a
+                  work scenario, and include one relevant work sample.
                 </p>
               </div>
 
-              <Link
-                className="btn apply-primary-action"
-                href={`/applicant/opportunities/${opportunity.id}/focused-apply`}
-              >
-                Continue to Apply with proof
-              </Link>
+              {existingApplication ? (
+                <Link className="btn apply-primary-action" href="/applicant/applications">
+                  View {getApplicationStatusLabel(existingApplication.status).toLowerCase()} application
+                </Link>
+              ) : (
+                <Link
+                  className="btn apply-primary-action"
+                  href={`/applicant/opportunities/${opportunity.id}/focused-apply`}
+                >
+                  Start focused application
+                </Link>
+              )}
             </WorkSurface>
           </div>
 
           <aside className="apply-side">
             <WorkSurface className="apply-side-card">
-              <p className="eyebrow">Employer</p>
+              <p className="meta-label">Employer</p>
               <h3>{state.company.name}</h3>
               <p className="muted">{state.company.description}</p>
 
@@ -175,59 +197,18 @@ export default function OpportunityDetailPage() {
               </div>
             </WorkSurface>
 
-            <WorkSurface className="apply-side-card">
-              <div className="apply-proof-box">
-                <h3>Proof expectations</h3>
-                <p className="muted">
-                  Include a link the employer can open. Good proof can be a
-                  GitHub repository, portfolio page, shared document, school
-                  project, report, or screenshot folder.
-                </p>
-              </div>
-            </WorkSurface>
-
-            <WorkSurface className="apply-side-card">
-              <p className="eyebrow">Applicant profile</p>
-              <h3>{state.applicant.fullName}</h3>
-              <p className="muted">{state.applicant.education}</p>
-              <p className="muted">{state.applicant.school}</p>
-
-              <div className="row">
-                {state.applicant.skills.map((skill) => (
-                  <Badge key={skill}>{skill}</Badge>
-                ))}
-              </div>
-            </WorkSurface>
           </aside>
         </section>
-        </BlueprintEnvironment>
+        </ProductEnvironment>
 
-        <section id="focused-apply" className="apply-entry-grid">
-          <WorkSurface className="apply-mode-summary">
-            <div className="stack">
-              <p className="eyebrow">Primary application path</p>
-              <h2>Apply with proof</h2>
-              <p className="muted">
-                Answer employer questions, complete the scenario task, and add
-                a concrete proof item before submitting.
-              </p>
-            </div>
-
-            <Link
-              className="btn apply-primary-action"
-              href={`/applicant/opportunities/${opportunity.id}/focused-apply`}
-            >
-              Start Apply with proof
-            </Link>
-          </WorkSurface>
-
+        {!existingApplication ? (
+        <section className="apply-entry-grid secondary-options">
           <WorkSurface className="quick-apply-entry">
             <div className="stack-sm">
-              <p className="eyebrow">Secondary option</p>
-              <h3>Quick Apply</h3>
+              <h3>Profile application</h3>
               <p className="muted">
-                Use your saved profile and CV preview. Apply with proof remains
-                the stronger option for this role.
+                Send your saved profile and portfolio. This option does not
+                include role-specific answers or a scenario response.
               </p>
             </div>
 
@@ -235,10 +216,15 @@ export default function OpportunityDetailPage() {
               className="btn secondary"
               href={`/applicant/opportunities/${opportunity.id}/quick-apply`}
             >
-              Preview Quick Apply
+              Review profile application
             </Link>
           </WorkSurface>
         </section>
+        ) : isApplicationFinal(existingApplication.status) ? (
+          <div className="notice" role="status">
+            This application has a final decision and can no longer be changed.
+          </div>
+        ) : null}
       </div>
     </main>
   );

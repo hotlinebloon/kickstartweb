@@ -12,7 +12,7 @@ import {
   type GrowthTask,
   type TaskStatus,
 } from "@/lib/demo-store";
-import { Badge, Progress, StatCard } from "@/components/ui";
+import { Badge, LoadingState, Progress } from "@/components/ui";
 
 const columns: {
   id: TaskStatus;
@@ -21,23 +21,23 @@ const columns: {
 }[] = [
   {
     id: "havent_started",
-    title: "Haven’t Started",
-    description: "Assigned starter tasks.",
+    title: "Assigned",
+    description: "Tasks ready for you to start.",
   },
   {
     id: "working_on_it",
-    title: "Working On It",
-    description: "Tasks currently being worked on.",
+    title: "In progress",
+    description: "Tasks you are actively working on.",
   },
   {
     id: "needs_review",
-    title: "Needs Review",
-    description: "Submitted work waiting for employer review.",
+    title: "Submitted",
+    description: "Work waiting for employer review.",
   },
   {
     id: "completed",
     title: "Completed",
-    description: "Approved work that counts toward progress.",
+    description: "Approved work in your development record.",
   },
 ];
 
@@ -48,21 +48,29 @@ function nextStatus(status: TaskStatus): TaskStatus | null {
 }
 
 function actionLabel(status: TaskStatus) {
-  if (status === "havent_started") return "Move to Working On It";
-  if (status === "working_on_it") return "Submit to Needs Review";
-  return "Locked";
+  if (status === "havent_started") return "Start task";
+  if (status === "working_on_it") return "Submit work for review";
+  return "No action available";
 }
 
 export default function EmployeeTasksPage() {
   const [state, setState] = useState<DemoState | null>(null);
   const [updates, setUpdates] = useState<Record<string, string>>({});
   const [links, setLinks] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     setState(getState());
   }, []);
 
-  const placement = useMemo(() => state?.placements[0] ?? null, [state]);
+  const placement = useMemo(
+    () =>
+      state?.placements.find(
+        (item) => item.applicantId === state.applicant.id
+      ) ?? null,
+    [state]
+  );
 
   const application = useMemo(() => {
     if (!state || !placement) return null;
@@ -90,11 +98,21 @@ export default function EmployeeTasksPage() {
 
     if (!status) return;
 
-    const updateText =
-      updates[task.id]?.trim() ||
-      (status === "working_on_it"
-        ? "Started working on this task."
-        : "Submitted task for employer review.");
+    const updateText = updates[task.id]?.trim() ?? "";
+    const submissionLink = links[task.id]?.trim() ?? "";
+    if (!updateText) {
+      setErrors((current) => ({ ...current, [task.id]: "Add a progress update before changing this task’s status." }));
+      return;
+    }
+    if (status === "needs_review") {
+      try {
+        const url = new URL(submissionLink);
+        if (!["http:", "https:"].includes(url.protocol)) throw new Error();
+      } catch {
+        setErrors((current) => ({ ...current, [task.id]: "Add a complete work link starting with https:// or http:// before submitting." }));
+        return;
+      }
+    }
 
     const next = updateTask({
       taskId: task.id,
@@ -102,11 +120,13 @@ export default function EmployeeTasksPage() {
       updateText,
       submissionLink:
         status === "needs_review"
-          ? links[task.id]?.trim() || "https://github.com/arta-demo/submission"
-          : links[task.id]?.trim() || undefined,
+          ? submissionLink
+          : submissionLink || undefined,
     });
 
     setState(next);
+    setNotice(status === "working_on_it" ? "Task started. Add updates here as your work progresses." : "Work submitted. The employer can now review it.");
+    setErrors((current) => ({ ...current, [task.id]: "" }));
 
     setUpdates((prev) => ({
       ...prev,
@@ -119,10 +139,19 @@ export default function EmployeeTasksPage() {
     }));
   }
 
+  function retractSubmission(task: GrowthTask) {
+    setState(updateTask({
+      taskId: task.id,
+      status: "working_on_it",
+      updateText: "Submission withdrawn for editing.",
+    }));
+    setNotice("Submission withdrawn. You can edit the work and submit it again.");
+  }
+
   if (!state) {
     return (
       <main className="page">
-        <div className="container">Loading...</div>
+        <div className="container"><LoadingState label="Loading placement tasks" /></div>
       </main>
     );
   }
@@ -133,10 +162,10 @@ export default function EmployeeTasksPage() {
         <div className="container stack-lg">
           <section className="stack">
             <p className="eyebrow">Intern workspace</p>
-            <h1>No starter tasks yet</h1>
+            <h1>No placement tasks yet</h1>
             <p className="lead">
               The employer must accept an applicant first. That creates the
-              placement and unlocks the intern task board.
+              placement and unlocks the intern workspace.
             </p>
           </section>
 
@@ -153,28 +182,30 @@ export default function EmployeeTasksPage() {
   return (
     <main className="page">
       <div className="container stack-lg">
-        <section className="between">
+        <section className="page-header between">
           <div className="stack">
             <p className="eyebrow">Intern workspace</p>
-            <h1>Intern task board</h1>
+            <h1>Placement tasks</h1>
             <p className="lead">
-              Move starter tasks from assigned work to active progress, then
-              submit proof for employer review.
+              Start assigned tasks, share progress updates, and submit work for
+              employer review.
             </p>
           </div>
 
           <div className="row">
             <Link className="btn secondary" href="/employee/progress">
-              Intern progress
+              View development record
             </Link>
           </div>
         </section>
+
+        {notice ? <div className="notice" role="status">{notice}</div> : null}
 
         <section className="growth-summary">
           <div className="growth-hero-card">
             <div className="between">
               <div className="stack-sm">
-                <p className="eyebrow">Active placement</p>
+                <p className="meta-label">Active placement</p>
                 <h2>{placement.roleTitle}</h2>
                 <p className="muted">
                   {application.applicantSnapshot.fullName} · {state.company.name} ·
@@ -187,50 +218,7 @@ export default function EmployeeTasksPage() {
 
             <Progress value={progress?.completionRate ?? 0} />
 
-            <div className="grid grid-4">
-              <StatCard
-                title="Not started"
-                description="Assigned"
-                value={progress?.notStarted ?? 0}
-              />
-              <StatCard
-                title="Working"
-                description="In progress"
-                value={progress?.working ?? 0}
-              />
-              <StatCard
-                title="Review"
-                description="Waiting employer"
-                value={progress?.review ?? 0}
-              />
-              <StatCard
-                title="Completed"
-                description="Approved"
-                value={progress?.completed ?? 0}
-              />
-            </div>
           </div>
-
-          <aside className="side-panel">
-            <section className="side-panel-card">
-              <p className="eyebrow">How to demo this</p>
-              <h3>Move one task through the board</h3>
-              <p className="muted">
-                Start with a task in Haven’t Started, move it to Working On It,
-                then submit it to Needs Review. The employer completes it on the
-                review page.
-              </p>
-            </section>
-
-            <section className="side-panel-card">
-              <p className="eyebrow">Why it matters</p>
-              <h3>Kickstart continues after hiring</h3>
-              <p className="muted">
-                The intern does not disappear after being accepted. Their work,
-                feedback, and proof become visible progress.
-              </p>
-            </section>
-          </aside>
         </section>
 
         <section className="growth-board">
@@ -242,7 +230,7 @@ export default function EmployeeTasksPage() {
                 <div className="growth-column-header">
                   <div>
                     <h3>{column.title}</h3>
-                    <p className="muted" style={{ marginTop: 6 }}>
+                    <p className="section-support-text">
                       {column.description}
                     </p>
                   </div>
@@ -251,7 +239,7 @@ export default function EmployeeTasksPage() {
                 </div>
 
                 {columnTasks.length === 0 ? (
-                  <div className="empty-column">No tasks here.</div>
+                  <div className="empty-column">No tasks in this status.</div>
                 ) : (
                   columnTasks.map((task) => (
                     <article key={task.id} className="growth-task">
@@ -264,12 +252,12 @@ export default function EmployeeTasksPage() {
 
                       <div className="task-meta-grid">
                         <div className="task-meta-box">
-                          <p className="eyebrow">Due</p>
+                          <p className="meta-label">Due</p>
                           <p>{formatDate(task.dueDate)}</p>
                         </div>
 
                         <div className="task-meta-box">
-                          <p className="eyebrow">Priority</p>
+                          <p className="meta-label">Priority</p>
                           <p>{getPriorityLabel(task.priority)}</p>
                         </div>
                       </div>
@@ -281,9 +269,9 @@ export default function EmployeeTasksPage() {
                       ) : null}
 
                       {task.submissionLink ? (
-                        <p className="muted proof-link">
-                          <strong>Submission:</strong> {task.submissionLink}
-                        </p>
+                        <a className="text-link" href={task.submissionLink} target="_blank" rel="noreferrer">
+                          Open submitted work
+                        </a>
                       ) : null}
 
                       {task.feedbackComment ? (
@@ -296,33 +284,54 @@ export default function EmployeeTasksPage() {
                       {task.status === "havent_started" ||
                       task.status === "working_on_it" ? (
                         <div className="task-action-area">
+                          <label>
+                            Progress update
                           <textarea
+                            id={`task-update-${task.id}`}
                             className="textarea"
+                            aria-invalid={Boolean(errors[task.id])}
+                            aria-describedby={errors[task.id] ? `task-error-${task.id}` : undefined}
                             placeholder={
                               task.status === "havent_started"
                                 ? "What will you start with?"
                                 : "What did you finish or learn?"
                             }
                             value={updates[task.id] ?? ""}
-                            onChange={(event) =>
+                            onChange={(event) => {
                               setUpdates((prev) => ({
                                 ...prev,
                                 [task.id]: event.target.value,
-                              }))
-                            }
+                              }));
+                              setErrors((current) => ({ ...current, [task.id]: "" }));
+                            }}
                           />
+                          </label>
 
+                          <label>
+                            Work link {task.status === "working_on_it" ? <span className="required-label">Required to submit</span> : null}
                           <input
+                            id={`task-proof-${task.id}`}
                             className="input"
-                            placeholder="Proof/submission link"
+                            type="url"
+                            aria-invalid={Boolean(errors[task.id])}
+                            aria-describedby={errors[task.id] ? `task-error-${task.id}` : undefined}
+                            placeholder="https://example.com/your-work"
                             value={links[task.id] ?? ""}
-                            onChange={(event) =>
+                            onChange={(event) => {
                               setLinks((prev) => ({
                                 ...prev,
                                 [task.id]: event.target.value,
-                              }))
-                            }
+                              }));
+                              setErrors((current) => ({ ...current, [task.id]: "" }));
+                            }}
                           />
+                          </label>
+
+                          {errors[task.id] ? (
+                            <p id={`task-error-${task.id}`} className="field-error">
+                              {errors[task.id]}
+                            </p>
+                          ) : null}
 
                           <button
                             className="btn"
@@ -335,12 +344,17 @@ export default function EmployeeTasksPage() {
                       ) : null}
 
                       {task.status === "needs_review" ? (
-                        <Badge tone="warning">Waiting for employer review</Badge>
+                        <div className="row">
+                          <Badge tone="warning">Submitted for review</Badge>
+                          <button className="btn secondary" type="button" onClick={() => retractSubmission(task)}>
+                            Withdraw submission
+                          </button>
+                        </div>
                       ) : null}
 
                       {task.status === "completed" ? (
                         <Badge tone="success">
-                          Counts toward progress profile
+                          Added to development record
                         </Badge>
                       ) : null}
                     </article>
