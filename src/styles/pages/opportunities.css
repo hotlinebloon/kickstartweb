@@ -1,0 +1,217 @@
+/* Opportunity discovery and employer opportunity management */
+.opportunity-dashboard-header {
+  grid-template-columns: 1fr;
+}
+
+.opportunity-toolbar {
+  display: grid;
+  grid-template-columns: minmax(18rem, 1fr) auto;
+  align-items: end;
+  gap: var(--space-md);
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--surface);
+  padding: var(--space-lg);
+}
+
+.opportunity-search .input {
+  min-height: 48px;
+}
+
+.opportunity-filter-disclosure {
+  min-width: min(22rem, 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.opportunity-filter-disclosure > summary,
+.weekly-review-disclosure > summary,
+.disclosure > summary {
+  cursor: pointer;
+  padding: 0.85rem 0.95rem;
+  font-size: 0.84rem;
+  font-weight: 730;
+}
+
+.opportunity-filter-disclosure[open] {
+  grid-column: 1 / -1;
+}
+
+.opportunity-filter-disclosure[open] > summary,
+.weekly-review-disclosure[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.opportunity-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+.opportunity-results-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding-top: var(--space-sm);
+}
+
+.opportunity-grid,
+.employer-role-list {
+  display: grid;
+  border-top: 3px solid var(--ink);
+}
+
+.opportunity-card {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr) minmax(14rem, 0.32fr);
+  align-items: start;
+  gap: var(--space-lg);
+  border-bottom: 1px solid var(--line-strong);
+  background: transparent;
+  padding: var(--space-xl) var(--space-md);
+  transition:
+    background-color 200ms var(--ease),
+    transform 200ms var(--ease);
+}
+
+.opportunity-card:hover {
+  background: var(--blue-soft);
+  transform: translateX(2px);
+}
+
+.opportunity-card:hover .opportunity-card-description,
+.opportunity-card:hover .opportunity-deadline span,
+.opportunity-card:hover .opportunity-skill-list span {
+  color: var(--ink);
+}
+
+.opportunity-card-top {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.opportunity-company-mark,
+.apply-company-mark {
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--blue);
+  color: var(--graphite);
+  font-weight: 800;
+}
+
+.opportunity-company-mark {
+  width: 52px;
+  height: 52px;
+  border: 2px solid var(--ink);
+}
+
+.save-opportunity-button {
+  min-height: 38px;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+.save-opportunity-button.saved {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue-deep);
+}
+
+.opportunity-card-title {
+  margin-bottom: var(--space-2xs);
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.opportunity-card-description {
+  max-width: 60ch;
+  color: var(--muted);
+}
+
+.opportunity-skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.opportunity-skill-list span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  padding: 0.28rem 0.52rem;
+  font-size: 0.72rem;
+  font-weight: 680;
+}
+
+.opportunity-skill-list span.matched {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue-deep);
+}
+
+.opportunity-card-footer {
+  display: grid;
+  min-height: 100%;
+  align-content: space-between;
+  gap: var(--space-md);
+  border-left: 1px solid var(--line);
+  padding-left: var(--space-lg);
+}
+
+.opportunity-deadline {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.opportunity-deadline span,
+.employer-role-data span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.opportunity-deadline strong {
+  font-size: 0.82rem;
+}
+
+.employer-opportunity-form {
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--blue-soft);
+  padding: var(--space-xl);
+}
+
+.employer-role-row {
+  display: grid;
+  grid-template-columns: minmax(17rem, 1fr) minmax(18rem, 0.7fr) auto;
+  align-items: center;
+  gap: var(--space-lg);
+  border-bottom: 1px solid var(--line-strong);
+  padding: var(--space-xl) var(--space-md);
+}
+
+.employer-role-row h2 {
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.employer-role-data {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.employer-role-data > div {
+  display: grid;
+  gap: var(--space-2xs);
+  border-left: 1px solid var(--line);
+  padding: 0.25rem var(--space-sm);
+}
+
+.employer-role-actions {
+  justify-content: flex-end;
+}
+

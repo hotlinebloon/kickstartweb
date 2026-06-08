@@ -1,0 +1,79 @@
+/* Auth */
+.auth-page {
+  padding-block: var(--space-3xl);
+}
+
+.auth-shell {
+  display: grid;
+  grid-template-columns: minmax(19rem, 0.62fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: clamp(3rem, 8vw, 7rem);
+}
+
+.auth-intro {
+  position: sticky;
+  top: 9rem;
+  min-height: 31rem;
+  align-content: space-between;
+  border-radius: 0;
+  background: var(--graphite);
+  color: white;
+  padding: var(--space-2xl);
+}
+
+.auth-intro h1 {
+  max-width: 11ch;
+  color: white;
+  font-family: "Nimbus Roman No9 L", "Nimbus Roman", Georgia, serif;
+  font-size: 3.5rem;
+  font-weight: 600;
+  line-height: 0.98;
+}
+
+.auth-intro .lead {
+  color: oklch(86% 0 0);
+}
+
+.auth-choice,
+.auth-form {
+  align-self: start;
+}
+
+.auth-choice,
+.auth-form {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.auth-form {
+  padding: var(--space-xl);
+}
+
+.role-option {
+  min-height: 12rem;
+  width: 100%;
+  color: var(--ink);
+  text-align: left;
+  transition:
+    border-color 180ms var(--ease),
+    background-color 180ms var(--ease),
+    transform 180ms var(--ease);
+}
+
+.role-option:hover,
+.role-option.selected {
+  border-color: var(--ink);
+  background: var(--blue-soft);
+}
+
+.role-option:hover {
+  transform: translateY(-2px);
+}
+
+.auth-action {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-lg);
+}
+
