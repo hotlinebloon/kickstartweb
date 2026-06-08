@@ -1,7 +1,11 @@
-import { generateOpportunityParams } from "@/lib/opportunity-params";
 import { OpportunityDetailClient } from "./opportunity-detail-client";
 
-export const generateStaticParams = generateOpportunityParams;
+export function generateStaticParams() {
+  return [
+    { id: "opp-frontend-intern" },
+    { id: "opp-data-assistant" },
+  ];
+}
 
 export default async function OpportunityDetailPage({
   params,
