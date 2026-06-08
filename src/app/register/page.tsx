@@ -6,6 +6,7 @@ import {
   registerDemoUser,
   type DemoRole,
 } from "@/lib/auth-store";
+import { hardNavigate } from "@/lib/navigation";
 
 export default function RegisterPage() {
   const [role, setRole] = useState<DemoRole>("employer");
@@ -33,7 +34,7 @@ export default function RegisterPage() {
       role,
     });
 
-    window.location.assign(getDefaultRedirect(user.role));
+    hardNavigate(getDefaultRedirect(user.role));
   }
 
   return (

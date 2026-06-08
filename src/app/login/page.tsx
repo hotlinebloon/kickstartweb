@@ -6,13 +6,14 @@ import {
   loginAs,
   type DemoRole,
 } from "@/lib/auth-store";
+import { hardNavigate } from "@/lib/navigation";
 
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState<DemoRole>("employer");
 
   function handleLogin(role: DemoRole) {
     const user = loginAs(role);
-    window.location.assign(getDefaultRedirect(user.role));
+    hardNavigate(getDefaultRedirect(user.role));
   }
 
   return (
